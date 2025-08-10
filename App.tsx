@@ -23,6 +23,7 @@ import {
   getUserProfile,
   createUserProfile,
   isPro,
+  updateLastLogin,
 } from "./services/firestoreStorage";
 import type { User } from "firebase/auth";
 
@@ -101,6 +102,15 @@ const App: React.FC = () => {
             await createUserProfile(firebaseUser.uid, firebaseUser.email || "");
             profile = await getUserProfile(firebaseUser.uid);
           }
+
+          // Update last login time
+          if (profile) {
+            await updateLastLogin(firebaseUser.uid);
+            // Update local profile with new login time
+            const now = new Date().toISOString();
+            profile = { ...profile, lastLoginAt: now, updatedAt: now };
+          }
+
           setUserProfile(profile);
         } catch (error) {
           console.error("Error loading user profile:", error);

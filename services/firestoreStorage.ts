@@ -352,6 +352,14 @@ export function isBeta(userProfile: UserProfile | null): boolean {
   return !!userProfile && userProfile.role === "beta";
 }
 
+export async function updateLastLogin(uid: string): Promise<void> {
+  const now = new Date().toISOString();
+  await updateDoc(doc(db, "users", uid, "profile", "user"), {
+    lastLoginAt: now,
+    updatedAt: now,
+  });
+}
+
 // Debug function retained for development, but avoid using in production UI
 export async function debugFirestoreStructure(): Promise<void> {
   try {

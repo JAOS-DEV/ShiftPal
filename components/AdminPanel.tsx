@@ -25,6 +25,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ user, settings }) => {
   const [statusFilter, setStatusFilter] = useState<
     "all" | "active" | "expired" | "no-sub"
   >("all");
+  const [lastLoginFilter, setLastLoginFilter] = useState<
+    "all" | "today" | "week" | "month" | "never"
+  >("all");
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
@@ -157,6 +160,35 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ user, settings }) => {
           }
         } else if (statusFilter === "no-sub") {
           if (userProfile.proUntil) {
+            return false;
+          }
+        }
+      }
+
+      // Last login filter
+      if (lastLoginFilter !== "all") {
+        if (!userProfile.lastLoginAt) {
+          if (lastLoginFilter !== "never") {
+            return false;
+          }
+        } else {
+          const lastLogin = new Date(userProfile.lastLoginAt);
+          const now = new Date();
+          const today = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate()
+          );
+          const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+          const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+          if (lastLoginFilter === "today" && lastLogin < today) {
+            return false;
+          } else if (lastLoginFilter === "week" && lastLogin < weekAgo) {
+            return false;
+          } else if (lastLoginFilter === "month" && lastLogin < monthAgo) {
+            return false;
+          } else if (lastLoginFilter === "never") {
             return false;
           }
         }
@@ -461,14 +493,41 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ user, settings }) => {
                   <option value="no-sub">No Subscription</option>
                 </select>
 
+                <select
+                  value={lastLoginFilter}
+                  onChange={(e) =>
+                    setLastLoginFilter(
+                      e.target.value as
+                        | "all"
+                        | "today"
+                        | "week"
+                        | "month"
+                        | "never"
+                    )
+                  }
+                  className={`text-xs border rounded px-2 py-1 ${
+                    settings.darkMode
+                      ? "bg-gray-800 border-gray-600 text-gray-100"
+                      : "bg-white border-slate-300 text-slate-800"
+                  }`}
+                >
+                  <option value="all">All Times</option>
+                  <option value="today">Today</option>
+                  <option value="week">This Week</option>
+                  <option value="month">This Month</option>
+                  <option value="never">Never</option>
+                </select>
+
                 {/* Clear Filters */}
                 {(roleFilter !== "all" ||
                   statusFilter !== "all" ||
+                  lastLoginFilter !== "all" ||
                   searchTerm) && (
                   <button
                     onClick={() => {
                       setRoleFilter("all");
                       setStatusFilter("all");
+                      setLastLoginFilter("all");
                       setSearchTerm("");
                     }}
                     className={`text-xs px-2 py-1 rounded border transition-colors ${
@@ -505,6 +564,13 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ user, settings }) => {
                       >
                         Created:{" "}
                         {new Date(userProfile.createdAt).toLocaleDateString()}
+                        {userProfile.lastLoginAt && (
+                          <>
+                            <br />
+                            Last login:{" "}
+                            {new Date(userProfile.lastLoginAt).toLocaleString()}
+                          </>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">

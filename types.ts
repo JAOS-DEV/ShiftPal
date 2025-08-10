@@ -85,6 +85,7 @@ export interface UserProfile {
   proUntil?: string; // ISO date
   createdAt: string;
   updatedAt: string;
+  lastLoginAt?: string; // ISO date
 }
 
 export interface ChatMessage {
