@@ -30,15 +30,6 @@ const firebaseConfig = {
 // Initialize Firebase app (singleton by module scope)
 const app = initializeApp(firebaseConfig);
 
-// Debug: Log Firebase configuration (only in development)
-if (import.meta.env.DEV) {
-  console.log('🔥 Firebase Config:', {
-    projectId: firebaseConfig.projectId,
-    authDomain: firebaseConfig.authDomain,
-    apiKey: firebaseConfig.apiKey?.substring(0, 10) + '...'
-  });
-}
-
 // Initialize Analytics (only in production to avoid development noise)
 export const analytics =
   typeof window !== "undefined" && import.meta.env.PROD
