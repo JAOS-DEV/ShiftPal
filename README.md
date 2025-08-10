@@ -4,7 +4,7 @@ ShiftPal is a modern, responsive web application designed for professional drive
 
 ## Live Demo
 
-🌐 **[View Live Demo](https://your-username.github.io/ShiftPal/)**
+🌐 **[View Live Demo](https://JAOS-DEV.github.io/ShiftPal/)**
 
 ## Features
 
