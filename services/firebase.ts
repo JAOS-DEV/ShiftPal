@@ -28,6 +28,14 @@ const firebaseConfig = {
 };
 
 // Validate Firebase configuration
+console.log("🔍 Debug: Environment variables check:", {
+  VITE_FIREBASE_PROJECT_ID: import.meta.env.VITE_FIREBASE_PROJECT_ID || "undefined",
+  VITE_FIREBASE_AUTH_DOMAIN: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "undefined",
+  VITE_FIREBASE_API_KEY: import.meta.env.VITE_FIREBASE_API_KEY ? "present" : "missing",
+  NODE_ENV: import.meta.env.MODE,
+  PROD: import.meta.env.PROD,
+});
+
 if (!firebaseConfig.projectId) {
   console.error(
     "❌ Firebase projectId is missing. Check your environment variables."
