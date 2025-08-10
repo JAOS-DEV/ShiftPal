@@ -23,11 +23,11 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
 
   const handleEmailAdmin = () => {
     if (!supportEmail) return;
-    const subject = `Driver Buddy - Premium access request`;
+    const subject = `Driver Buddy - Pro access request`;
     const diagnostics = `Diagnostics:\nUID: ${userUid || "n/a"}\nRole: ${
       userRole || "n/a"
     }`;
-    const body = `Hi,\n\nI'd like to upgrade to Premium.\n\n${diagnostics}\n\nThanks!`;
+    const body = `Hi,\n\nI'd like to upgrade to Pro.\n\n${diagnostics}\n\nThanks!`;
     const url = `mailto:${encodeURIComponent(
       supportEmail
     )}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
@@ -49,7 +49,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
           }`}
         >
           <div className="flex items-center justify-between">
-            <h3 className="text-base font-bold">Upgrade to Premium</h3>
+            <h3 className="text-base font-bold">Upgrade to Pro</h3>
             <button
               onClick={onClose}
               className={
@@ -65,7 +65,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
         </div>
         <div className="px-4 py-3 space-y-3">
           <p className={darkMode ? "text-gray-300" : "text-slate-600"}>
-            Unlock Premium to use all features.
+            Unlock Pro to use all features.
           </p>
           <ul className="list-disc pl-5 text-sm space-y-1">
             <li>Cloud storage across devices</li>

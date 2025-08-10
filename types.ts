@@ -76,13 +76,13 @@ export interface Settings {
   lastSyncAt?: import("firebase/firestore").FieldValue | string;
 }
 
-export type UserRole = "free" | "premium" | "admin" | "beta";
+export type UserRole = "free" | "pro" | "admin" | "beta";
 
 export interface UserProfile {
   uid: string;
   email: string;
   role: UserRole;
-  premiumUntil?: string; // ISO date
+  proUntil?: string; // ISO date
   createdAt: string;
   updatedAt: string;
 }

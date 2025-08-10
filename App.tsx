@@ -22,7 +22,7 @@ import { auth, onAuthStateChanged } from "./services/firebase";
 import {
   getUserProfile,
   createUserProfile,
-  isPremium,
+  isPro,
 } from "./services/firestoreStorage";
 import type { User } from "firebase/auth";
 
@@ -145,9 +145,9 @@ const App: React.FC = () => {
   useEffect(() => {
     if (!authChecked || !user) return;
     if (settings.storageMode !== "cloud") return;
-    // Gate cloud writes to premium/admin only
-    const userIsPremium = isPremium(userProfile);
-    if (!userIsPremium) return;
+    // Gate cloud writes to pro/admin only
+    const userIsPro = isPro(userProfile);
+    if (!userIsPro) return;
     if (applyingCloudRef.current) return;
 
     let timeoutId: number | undefined;
@@ -196,9 +196,9 @@ const App: React.FC = () => {
   useEffect(() => {
     if (!authChecked || !user) return;
     if (settings.storageMode !== "cloud") return;
-    // Gate cloud reads to premium/admin only so free users don't re-apply cloud settings
-    const userIsPremium = isPremium(userProfile);
-    if (!userIsPremium) return;
+    // Gate cloud reads to pro/admin only so free users don't re-apply cloud settings
+    const userIsPro = isPro(userProfile);
+    if (!userIsPro) return;
     let unsubscribers: Array<() => void> = [];
 
     const setup = async () => {
@@ -261,8 +261,8 @@ const App: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authChecked, user, settings.storageMode, userProfile]);
 
-  // Check if user is premium and admin
-  const userIsPremium = isPremium(userProfile);
+  // Check if user is pro and admin
+  const userIsPro = isPro(userProfile);
   const userIsAdmin = userProfile?.role === "admin";
 
   // Show loading while auth is being checked

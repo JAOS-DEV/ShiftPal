@@ -6,6 +6,16 @@ import { usePeriodFilter } from "../hooks/usePeriodFilter";
 import { PlusIcon, TrashIcon } from "./icons";
 import useLocalStorage from "../hooks/useLocalStorage";
 import PeriodSelector from "./PeriodSelector";
+import ToastNotification from "./ToastNotification";
+import TabNavigation from "./TabNavigation";
+import TimeEntryForm from "./TimeEntryForm";
+import EntriesList from "./EntriesList";
+import SubmitDaySection from "./SubmitDaySection";
+import TotalSection from "./TotalSection";
+import HistoryView from "./HistoryView";
+import EditSubmissionModal from "./EditSubmissionModal";
+import TimeFormatModal from "./TimeFormatModal";
+import SubmissionInfoModal from "./SubmissionInfoModal";
 
 interface TimeTrackerProps {
   entries: TimeEntry[];
@@ -34,6 +44,7 @@ const TimeTracker: React.FC<TimeTrackerProps> = ({
   const [startTimeError, setStartTimeError] = useState("");
   const [endTimeError, setEndTimeError] = useState("");
   const [entriesHeight, setEntriesHeight] = useState(200); // Default fallback
+
   const [toast, setToast] = useState<{ message: string; visible: boolean }>({
     message: "",
     visible: false,
@@ -88,6 +99,7 @@ const TimeTracker: React.FC<TimeTrackerProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLDivElement>(null);
   const totalRef = useRef<HTMLDivElement>(null);
+  const submitRef = useRef<HTMLDivElement>(null);
   const entriesHeaderRef = useRef<HTMLHeadingElement>(null);
 
   // Toast effect
@@ -103,57 +115,37 @@ const TimeTracker: React.FC<TimeTrackerProps> = ({
   // Calculate available space for entries
   useEffect(() => {
     const calculateEntriesHeight = () => {
-      if (containerRef.current && entriesHeaderRef.current) {
-        // Get the actual viewport height
+      if (
+        containerRef.current &&
+        entriesHeaderRef.current &&
+        formRef.current &&
+        totalRef.current &&
+        submitRef.current
+      ) {
         const viewportHeight = window.innerHeight;
-
-        // Get the container's position and height
         const containerRect = containerRef.current.getBoundingClientRect();
         const containerTop = containerRect.top;
-
-        // Calculate the available height from container top to viewport bottom
         const availableViewportHeight = viewportHeight - containerTop;
+        const headerHeight = entriesHeaderRef.current.offsetHeight;
+        const formHeight = formRef.current.offsetHeight;
+        const totalHeight = totalRef.current.offsetHeight;
+        const submitHeight = submitRef.current.offsetHeight;
 
-        // Get the header height
-        const entriesHeaderHeight = entriesHeaderRef.current.offsetHeight;
+        // Account for all fixed sections: form, header, total, submit, nav bar, and padding
+        const navBarHeight = 44; // Correct bottom navigation height
+        const padding = 44; // Reasonable padding for extra space
 
-        // Account for navigation bar height and padding
-        const navBarHeight = 80;
-        const bottomPadding = 10;
-        const bottomPaddingHistory = 130;
+        const availableHeight =
+          availableViewportHeight -
+          headerHeight -
+          formHeight -
+          totalHeight -
+          submitHeight -
+          navBarHeight -
+          padding;
+        const finalHeight = Math.max(availableHeight, 100);
 
-        if (activeTab === "tracker") {
-          // For tracker view, account for form, total, and submit sections
-          if (formRef.current && totalRef.current) {
-            const formHeight = formRef.current.offsetHeight;
-            const totalHeight = totalRef.current.offsetHeight;
-
-            // Account for submit day section (approximate height)
-            const submitSectionHeight = 120; // Date picker + button + padding
-
-            const availableHeight =
-              availableViewportHeight -
-              formHeight -
-              totalHeight -
-              submitSectionHeight -
-              entriesHeaderHeight -
-              navBarHeight -
-              bottomPadding;
-
-            const finalHeight = Math.max(availableHeight, 100);
-            setEntriesHeight(finalHeight);
-          }
-        } else {
-          // For history view, only account for header and navigation
-          const availableHeight =
-            availableViewportHeight -
-            entriesHeaderHeight -
-            navBarHeight -
-            bottomPaddingHistory;
-
-          const finalHeight = Math.max(availableHeight, 100);
-          setEntriesHeight(finalHeight);
-        }
+        setEntriesHeight(finalHeight);
       }
     };
 
@@ -459,1270 +451,136 @@ const TimeTracker: React.FC<TimeTrackerProps> = ({
       }`}
     >
       {/* Toast Notification */}
-      {toast.visible && (
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50">
-          <div className="bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
-            <span className="text-sm font-medium">✅ {toast.message}</span>
-          </div>
-        </div>
-      )}
+      <ToastNotification visible={toast.visible} message={toast.message} />
 
       {/* Internal Navigation Tabs */}
-      <div
-        className={`flex-shrink-0 border-b ${
-          settings.darkMode
-            ? "bg-gray-900/40 border-gray-700"
-            : "bg-white/50 border-gray-200/80"
-        }`}
-      >
-        <div className="flex">
-          <button
-            onClick={() => setActiveTab("tracker")}
-            className={`flex-1 py-3 px-4 text-sm font-medium transition-colors duration-200 ${
-              activeTab === "tracker"
-                ? settings.darkMode
-                  ? "text-gray-100 border-b-2 border-indigo-400"
-                  : "text-gray-800 border-b-2 border-gray-800"
-                : settings.darkMode
-                ? "text-gray-400 hover:text-gray-200"
-                : "text-slate-500 hover:text-slate-700"
-            }`}
-          >
-            Tracker
-          </button>
-          <button
-            onClick={() => setActiveTab("history")}
-            className={`flex-1 py-3 px-4 text-sm font-medium transition-colors duration-200 ${
-              activeTab === "history"
-                ? settings.darkMode
-                  ? "text-gray-100 border-b-2 border-indigo-400"
-                  : "text-gray-800 border-b-2 border-gray-800"
-                : settings.darkMode
-                ? "text-gray-400 hover:text-gray-200"
-                : "text-slate-500 hover:text-slate-700"
-            }`}
-          >
-            History
-          </button>
-        </div>
-      </div>
+      <TabNavigation
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        settings={settings}
+      />
 
       {/* Content based on active tab */}
       {activeTab === "tracker" ? (
         <>
           {/* Fixed form section */}
-          <div ref={formRef} className="flex-shrink-0 p-3">
-            <div className="flex justify-between items-center mb-3">
-              <div className="flex items-center gap-1">
-                <h2
-                  className={`text-xs font-bold tracking-wider uppercase ${
-                    settings.darkMode ? "text-gray-400" : "text-slate-500"
-                  }`}
-                >
-                  TODAY'S ENTRIES
-                </h2>
-                <button
-                  onClick={() => setShowTimeFormatModal(true)}
-                  className={`transition-colors ${
-                    settings.darkMode
-                      ? "text-gray-400 hover:text-gray-200"
-                      : "text-slate-400 hover:text-slate-600"
-                  }`}
-                  title="How to enter time format"
-                >
-                  <svg
-                    className="w-3 h-3"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            <form
+          <div ref={formRef}>
+            <TimeEntryForm
+              startTime={startTime}
+              endTime={endTime}
+              startTimeError={startTimeError}
+              endTimeError={endTimeError}
+              isFormValid={isFormValid}
+              settings={settings}
+              onStartTimeChange={handleStartTimeChange}
+              onEndTimeChange={handleEndTimeChange}
               onSubmit={handleAddEntry}
-              className={`p-1.5 rounded-lg border mb-2 ${
-                settings.darkMode
-                  ? "bg-gray-700/50 border-gray-600"
-                  : "bg-white/50 border-gray-200/80"
-              }`}
-            >
-              <div className="grid grid-cols-2 gap-2 mb-1.5">
-                <div className="min-h-[2rem]">
-                  <label
-                    htmlFor="start-time"
-                    className={`text-xs font-bold tracking-wider uppercase ${
-                      settings.darkMode ? "text-gray-400" : "text-slate-500"
-                    }`}
-                  >
-                    START TIME
-                  </label>
-                  <input
-                    id="start-time"
-                    name="start-time"
-                    type="text"
-                    inputMode="numeric"
-                    title="Enter time in HH:MM format (e.g., 09:30)"
-                    placeholder="HH:MM"
-                    maxLength={5}
-                    value={startTime}
-                    onChange={handleStartTimeChange}
-                    className={`mt-0.5 w-full p-0.5 text-base bg-transparent border rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600 ${
-                      startTimeError
-                        ? "border-red-500"
-                        : settings.darkMode
-                        ? "border-gray-500 text-gray-100 placeholder-gray-400"
-                        : "border-slate-300 text-slate-800 placeholder-slate-400"
-                    }`}
-                  />
-                  {startTimeError && (
-                    <p className="mt-0.5 text-xs text-red-500">
-                      {startTimeError}
-                    </p>
-                  )}
-                </div>
-                <div className="min-h-[2rem]">
-                  <label
-                    htmlFor="end-time"
-                    className={`text-xs font-bold tracking-wider uppercase ${
-                      settings.darkMode ? "text-gray-400" : "text-slate-500"
-                    }`}
-                  >
-                    END TIME
-                  </label>
-                  <input
-                    ref={endTimeRef}
-                    id="end-time"
-                    name="end-time"
-                    type="text"
-                    inputMode="numeric"
-                    title="Enter time in HH:MM format (e.g., 17:00 or 24:00)"
-                    placeholder="HH:MM"
-                    maxLength={5}
-                    value={endTime}
-                    onChange={handleEndTimeChange}
-                    className={`mt-0.5 w-full p-0.5 text-base bg-transparent border rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600 ${
-                      endTimeError
-                        ? "border-red-500"
-                        : settings.darkMode
-                        ? "border-gray-500 text-gray-100 placeholder-gray-400"
-                        : "border-slate-300 text-slate-800 placeholder-slate-400"
-                    }`}
-                  />
-                  {endTimeError && (
-                    <p className="mt-0.5 text-xs text-red-500">
-                      {endTimeError}
-                    </p>
-                  )}
-                </div>
-              </div>
-              <button
-                type="submit"
-                disabled={!isFormValid}
-                className="w-full flex items-center justify-center gap-2 bg-gray-700 text-white font-bold py-1 px-2 rounded-md hover:bg-gray-600 transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed text-sm"
-              >
-                <PlusIcon className="h-3 w-3" />
-                Add Entry
-              </button>
-            </form>
+              onShowTimeFormatModal={() => setShowTimeFormatModal(true)}
+            />
           </div>
 
           {/* Entries section with calculated height */}
-          <div className="flex-1 overflow-hidden px-3">
+          <div className="flex-1 overflow-hidden">
             <div>
               <h2
                 ref={entriesHeaderRef}
-                className={`text-xs font-bold tracking-wider uppercase mb-1.5 ${
+                className={`text-xs font-bold tracking-wider uppercase mb-1.5 px-3 ${
                   settings.darkMode ? "text-gray-400" : "text-slate-500"
                 }`}
               >
                 ENTRIES
               </h2>
-              <div
-                className="overflow-y-auto"
-                style={{ height: `${entriesHeight}px` }}
-              >
-                <div className="space-y-1.5">
-                  {entries.length === 0 ? (
-                    <div
-                      className={`text-center p-3 rounded-md border ${
-                        settings.darkMode
-                          ? "bg-gray-700/50 border-gray-600/50"
-                          : "bg-white/50 border-gray-200/50"
-                      }`}
-                    >
-                      <div className="text-sm font-medium mb-1">
-                        Add your first entry
-                      </div>
-                      <div
-                        className={`text-xs mb-1 ${
-                          settings.darkMode ? "text-gray-400" : "text-slate-500"
-                        }`}
-                      >
-                        Example:{" "}
-                        <span className="font-mono">09:00 – 17:30</span>
-                      </div>
-                      <div
-                        className={`text-[11px] ${
-                          settings.darkMode ? "text-gray-400" : "text-slate-500"
-                        }`}
-                      >
-                        Enter times above and press “Add Entry”.
-                      </div>
-                    </div>
-                  ) : (
-                    entries.map((entry) => {
-                      // Format the times for display (HHMM to HH:MM)
-                      const formatTimeForDisplay = (time: string) => {
-                        if (time.length === 4) {
-                          return `${time.substring(0, 2)}:${time.substring(
-                            2,
-                            4
-                          )}`;
-                        }
-                        return time;
-                      };
-
-                      const displayStartTime = formatTimeForDisplay(
-                        entry.startTime
-                      );
-                      const displayEndTime = formatTimeForDisplay(
-                        entry.endTime
-                      );
-
-                      const duration = calculateDuration(
-                        displayStartTime,
-                        displayEndTime
-                      );
-                      return (
-                        <div
-                          key={entry.id}
-                          className={`flex items-center justify-between p-1.5 rounded-md border ${
-                            settings.darkMode
-                              ? "bg-gray-700/50 border-gray-600/50"
-                              : "bg-white/50 border-gray-200/50"
-                          }`}
-                        >
-                          <div className="flex items-center space-x-2 text-sm">
-                            <span>{displayStartTime}</span>
-                            <span
-                              className={
-                                settings.darkMode
-                                  ? "text-gray-400"
-                                  : "text-slate-400"
-                              }
-                            >
-                              &mdash;
-                            </span>
-                            <span>{displayEndTime}</span>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <span
-                              className={`font-mono text-sm ${
-                                settings.darkMode
-                                  ? "text-gray-300"
-                                  : "text-slate-600"
-                              }`}
-                            >
-                              {formatDurationWithMinutes(duration)}
-                            </span>
-                            <button
-                              onClick={() => removeEntry(entry.id)}
-                              className="text-red-500 hover:text-red-700 text-sm"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-              </div>
+              <EntriesList
+                entries={entries}
+                entriesHeight={entriesHeight}
+                settings={settings}
+                onRemoveEntry={removeEntry}
+                calculateDuration={calculateDuration}
+                formatDurationWithMinutes={formatDurationWithMinutes}
+              />
             </div>
           </div>
 
           {/* Fixed total section - guaranteed to be visible */}
-          <div
-            ref={totalRef}
-            className="flex-shrink-0 border-t border-slate-200 pt-1.5 mt-1.5 pb-2 px-4 mb-1.5"
-          >
-            <div className="flex justify-between items-center">
-              <h2
-                className={`text-sm font-bold tracking-wider uppercase ${
-                  settings.darkMode ? "text-gray-400" : "text-slate-500"
-                }`}
-              >
-                TOTAL
-              </h2>
-              <p className="text-xl font-bold text-gray-800 font-mono">
-                {formatDurationWithMinutes(totalDuration)}
-              </p>
-            </div>
+          <div ref={totalRef}>
+            <TotalSection
+              totalDuration={totalDuration}
+              formatDurationWithMinutes={formatDurationWithMinutes}
+              settings={settings}
+            />
           </div>
 
           {/* Submit Day Section */}
-          <div className="flex-shrink-0 px-4 pb-3 space-y-1.5">
-            {/* Date Picker */}
-            <div
-              className={`${
-                settings.darkMode
-                  ? "bg-gray-700/50 border border-gray-600/80"
-                  : "bg-white/50 border border-gray-200/80"
-              } p-1 rounded-lg`}
-            >
-              <div className="flex items-center justify-center gap-2 mb-0.5">
-                <label
-                  className={`text-xs font-medium text-center ${
-                    settings.darkMode ? "text-gray-300" : "text-slate-600"
-                  }`}
-                >
-                  Select date ({submissionsForDate.length} submissions)
-                </label>
-                <button
-                  onClick={() => setShowSubmissionInfoModal(true)}
-                  className={`${
-                    settings.darkMode
-                      ? "text-gray-400 hover:text-gray-200"
-                      : "text-slate-400 hover:text-slate-600"
-                  } transition-colors`}
-                  title="What is a submission?"
-                  aria-label="What is a submission?"
-                >
-                  <svg
-                    className="w-3 h-3"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </button>
-              </div>
-              <input
-                type="date"
-                value={submitDate}
-                onChange={(e) => setSubmitDate(e.target.value)}
-                className={`w-5/6 p-0.5 text-sm bg-transparent border rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600 mx-auto block ${
-                  settings.darkMode
-                    ? "border-gray-600 text-gray-100"
-                    : "border-slate-300 text-slate-800"
-                }`}
-              />
-            </div>
-
-            {/* Submit Button */}
-            <button
-              onClick={handleSubmitDay}
-              disabled={entries.length === 0}
-              className={`w-full py-1.5 px-3 rounded-lg font-bold transition-colors text-sm ${
-                entries.length > 0
-                  ? "bg-gray-700 text-white hover:bg-gray-600"
-                  : "bg-slate-300 text-slate-500 cursor-not-allowed"
-              }`}
-            >
-              Submit Entries
-            </button>
+          <div ref={submitRef}>
+            <SubmitDaySection
+              submitDate={submitDate}
+              submissionsForDate={submissionsForDate}
+              entries={entries}
+              settings={settings}
+              onDateChange={setSubmitDate}
+              onSubmitDay={handleSubmitDay}
+              onShowSubmissionInfoModal={() => setShowSubmissionInfoModal(true)}
+            />
           </div>
         </>
       ) : (
         <>
           {/* History View */}
-          <div className="flex-1 overflow-hidden p-4">
-            {/* Period Selector */}
-            <div className="mb-3">
-              <PeriodSelector
-                selectedPeriod={selectedPeriod}
-                selectedDate={selectedDate}
-                settings={settings}
-                onPeriodChange={setSelectedPeriod}
-                onDateChange={setSelectedDate}
-                getPeriodLabel={getPeriodLabel}
-                getCurrentWeekStart={getCurrentWeekStart}
-                getCurrentMonthStart={getCurrentMonthStart}
-                navigateWeek={navigateWeek}
-                navigateMonth={navigateMonth}
-                goToCurrentPeriod={goToCurrentPeriod}
-              />
-            </div>
-
-            <h2
-              ref={entriesHeaderRef}
-              className={`text-xs font-bold tracking-wider uppercase mb-2 ${
-                settings.darkMode ? "text-gray-400" : "text-slate-500"
-              }`}
-            >
-              SUBMITTED ENTRIES
-            </h2>
-            <div
-              className="overflow-y-auto"
-              style={{ height: `${entriesHeight}px` }}
-            >
-              <div className="space-y-2">
-                {filteredSubmissions.length === 0 ? (
-                  <p
-                    className={`text-center py-4 ${
-                      settings.darkMode ? "text-gray-400" : "text-slate-500"
-                    }`}
-                  >
-                    No submitted entries for this period.
-                  </p>
-                ) : (
-                  // Group submissions by date
-                  Object.entries(
-                    filteredSubmissions.reduce<
-                      Record<string, DailySubmission[]>
-                    >((groups, submission) => {
-                      const date = submission.date;
-                      if (!groups[date]) {
-                        groups[date] = [];
-                      }
-                      groups[date].push(submission);
-                      return groups;
-                    }, {})
-                  )
-                    .sort(
-                      ([dateA], [dateB]) =>
-                        new Date(dateB).getTime() - new Date(dateA).getTime()
-                    )
-                    .map(([date, submissions]: [string, DailySubmission[]]) => (
-                      <div
-                        key={date}
-                        className={`${
-                          settings.darkMode
-                            ? "bg-gray-700/40 border-gray-600/60"
-                            : "bg-white/50 border-gray-200/50"
-                        } p-3 rounded-md border`}
-                      >
-                        <div className="flex justify-between items-center mb-1.5">
-                          <span
-                            className={`font-medium ${
-                              settings.darkMode
-                                ? "text-gray-200"
-                                : "text-slate-700"
-                            }`}
-                          >
-                            {formatDate(date)}
-                          </span>
-                        </div>
-
-                        <div
-                          className={`text-xs mb-1.5 ${
-                            settings.darkMode
-                              ? "text-gray-400"
-                              : "text-slate-500"
-                          }`}
-                        >
-                          {submissions.length} submission
-                          {submissions.length > 1 ? "s" : ""}
-                        </div>
-
-                        <div className="space-y-1.5">
-                          {submissions
-                            .sort(
-                              (a, b) =>
-                                new Date(b.timestamp).getTime() -
-                                new Date(a.timestamp).getTime()
-                            )
-                            .map((submission, index) => (
-                              <div
-                                key={submission.timestamp}
-                                className={`border-l-2 pl-3 relative ${
-                                  settings.darkMode
-                                    ? "border-gray-600"
-                                    : "border-slate-200"
-                                } ${
-                                  index > 0
-                                    ? settings.darkMode
-                                      ? "mt-3 pt-3 border-t border-gray-700"
-                                      : "mt-3 pt-3 border-t border-slate-100"
-                                    : ""
-                                }`}
-                              >
-                                <div className="flex justify-between items-center mb-1">
-                                  <span
-                                    className={`text-xs ${
-                                      settings.darkMode
-                                        ? "text-gray-400"
-                                        : "text-slate-400"
-                                    }`}
-                                  >
-                                    Submitted at:{" "}
-                                    {submission.timestamp
-                                      .split("T")[1]
-                                      .substring(0, 5)}
-                                  </span>
-                                  <div className="relative dropdown-menu">
-                                    <button
-                                      onClick={() =>
-                                        handleToggleDropdown(
-                                          submission.timestamp
-                                        )
-                                      }
-                                      className={`${
-                                        settings.darkMode
-                                          ? "text-gray-400 hover:text-gray-200"
-                                          : "text-slate-500 hover:text-slate-700"
-                                      } p-1`}
-                                      title="More options"
-                                    >
-                                      ⋮
-                                    </button>
-                                    {openDropdownId ===
-                                      submission.timestamp && (
-                                      <div
-                                        className={`absolute right-0 top-6 rounded-lg shadow-lg z-10 min-w-[120px] border ${
-                                          settings.darkMode
-                                            ? "bg-gray-800 border-gray-700"
-                                            : "bg-white border-gray-200"
-                                        }`}
-                                      >
-                                        <button
-                                          onClick={() => {
-                                            handleEditSubmission(submission);
-                                            handleCloseDropdown();
-                                          }}
-                                          className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 ${
-                                            settings.darkMode
-                                              ? "hover:bg-gray-700 text-gray-100"
-                                              : "hover:bg-gray-100"
-                                          }`}
-                                        >
-                                          ✏️ Edit
-                                        </button>
-                                        <button
-                                          onClick={() => {
-                                            handleDuplicateSubmission(
-                                              submission
-                                            );
-                                            handleCloseDropdown();
-                                          }}
-                                          className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 ${
-                                            settings.darkMode
-                                              ? "hover:bg-gray-700 text-gray-100"
-                                              : "hover:bg-gray-100"
-                                          }`}
-                                        >
-                                          📋 Duplicate
-                                        </button>
-                                        <button
-                                          onClick={() => {
-                                            handleDeleteSubmission(
-                                              submission.timestamp
-                                            );
-                                            handleCloseDropdown();
-                                          }}
-                                          className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 ${
-                                            settings.darkMode
-                                              ? "hover:bg-red-900/30 text-red-400"
-                                              : "hover:bg-red-50 text-red-600"
-                                          }`}
-                                        >
-                                          🗑️ Delete
-                                        </button>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                                <div className="space-y-1">
-                                  {submission.entries.map((entry) => {
-                                    // Format the times for display (HHMM to HH:MM)
-                                    const formatTimeForDisplay = (
-                                      time: string
-                                    ) => {
-                                      if (time.length === 4) {
-                                        return `${time.substring(
-                                          0,
-                                          2
-                                        )}:${time.substring(2, 4)}`;
-                                      }
-                                      return time;
-                                    };
-
-                                    const displayStartTime =
-                                      formatTimeForDisplay(entry.startTime);
-                                    const displayEndTime = formatTimeForDisplay(
-                                      entry.endTime
-                                    );
-
-                                    const duration = calculateDuration(
-                                      displayStartTime,
-                                      displayEndTime
-                                    );
-                                    return (
-                                      <div
-                                        key={entry.id}
-                                        className={`flex justify-between items-center text-xs ${
-                                          settings.darkMode
-                                            ? "text-gray-300"
-                                            : "text-slate-600"
-                                        }`}
-                                      >
-                                        <span>
-                                          {displayStartTime} - {displayEndTime}
-                                        </span>
-                                        <span className="font-mono">
-                                          {formatDurationWithMinutes(duration)}
-                                        </span>
-                                      </div>
-                                    );
-                                  })}
-                                  {/* Total time for this submission */}
-                                  <div
-                                    className={`pt-1 border-t ${
-                                      settings.darkMode
-                                        ? "border-gray-700"
-                                        : "border-slate-200"
-                                    }`}
-                                  >
-                                    <div
-                                      className={`flex justify-between items-center text-xs font-medium ${
-                                        settings.darkMode
-                                          ? "text-gray-200"
-                                          : "text-slate-700"
-                                      }`}
-                                    >
-                                      <span>Total:</span>
-                                      <span className="font-mono">
-                                        {formatDurationWithMinutes(
-                                          calculateTotalDuration(
-                                            submission.entries
-                                          )
-                                        )}
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          {/* Total time for all submissions on this day */}
-                          <div
-                            className={`pt-2 border-t-2 ${
-                              settings.darkMode
-                                ? "border-gray-600"
-                                : "border-slate-300"
-                            }`}
-                          >
-                            <div
-                              className={`flex justify-between items-center text-sm font-bold ${
-                                settings.darkMode
-                                  ? "text-gray-100"
-                                  : "text-slate-800"
-                              }`}
-                            >
-                              <span>Day Total:</span>
-                              <span className="font-mono">
-                                {formatDurationWithMinutes(
-                                  calculateTotalDuration(
-                                    submissions.flatMap((sub) => sub.entries)
-                                  )
-                                )}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                )}
-              </div>
-            </div>
-          </div>
+          <HistoryView
+            filteredSubmissions={filteredSubmissions}
+            settings={settings}
+            selectedPeriod={selectedPeriod}
+            selectedDate={selectedDate}
+            openDropdownId={openDropdownId}
+            onPeriodChange={setSelectedPeriod}
+            onDateChange={setSelectedDate}
+            onToggleDropdown={handleToggleDropdown}
+            onEditSubmission={handleEditSubmission}
+            onDuplicateSubmission={handleDuplicateSubmission}
+            onDeleteSubmission={handleDeleteSubmission}
+            getPeriodLabel={getPeriodLabel}
+            getCurrentWeekStart={getCurrentWeekStart}
+            getCurrentMonthStart={getCurrentMonthStart}
+            navigateWeek={navigateWeek}
+            navigateMonth={navigateMonth}
+            goToCurrentPeriod={goToCurrentPeriod}
+            calculateDuration={calculateDuration}
+            formatDurationWithMinutes={formatDurationWithMinutes}
+            calculateTotalDuration={calculateTotalDuration}
+          />
         </>
       )}
 
       {/* Edit Modal */}
-      {showEditModal && editingSubmission && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2">
-          <div className="bg-white rounded-lg w-full max-w-sm mx-auto max-h-[80vh] overflow-y-auto">
-            <div className="p-3 border-b border-gray-200">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-bold text-slate-800">
-                  Edit Time Submission
-                </h3>
-                <button
-                  onClick={handleCancelEdit}
-                  className="text-slate-400 hover:text-slate-600"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-
-            <div className="p-3 space-y-3">
-              {/* Date */}
-              <div>
-                <label
-                  className={`block text-sm font-medium mb-1 ${
-                    settings.darkMode ? "text-gray-200" : "text-slate-700"
-                  }`}
-                >
-                  Date
-                </label>
-                <input
-                  type="date"
-                  value={editingSubmission.date}
-                  onChange={(e) => {
-                    const updatedSubmission = {
-                      ...editingSubmission,
-                      date: e.target.value,
-                    };
-                    setEditingSubmission(updatedSubmission);
-                  }}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600 text-xs bg-white min-w-0 text-slate-700 max-w-full"
-                />
-              </div>
-
-              {/* Time Entries */}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Time Entries
-                </label>
-                <div className="space-y-2">
-                  {editingSubmission.entries.map((entry, index) => (
-                    <div
-                      key={entry.id}
-                      className="border border-slate-200 rounded-md p-3"
-                    >
-                      <div className="flex justify-between items-center mb-2">
-                        <span
-                          className={`text-sm font-medium ${
-                            settings.darkMode
-                              ? "text-gray-200"
-                              : "text-slate-700"
-                          }`}
-                        >
-                          Entry {index + 1}
-                        </span>
-                        <button
-                          onClick={() => {
-                            const updatedEntries =
-                              editingSubmission.entries.filter(
-                                (_, i) => i !== index
-                              );
-                            const updatedSubmission = {
-                              ...editingSubmission,
-                              entries: updatedEntries,
-                              totalMinutes:
-                                calculateTotalDuration(updatedEntries)
-                                  .totalMinutes,
-                            };
-                            setEditingSubmission(updatedSubmission);
-                          }}
-                          className="text-red-500 hover:text-red-700 text-sm"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="block text-xs text-slate-600 mb-1">
-                            Start Time
-                          </label>
-                          <input
-                            type="text"
-                            inputMode="numeric"
-                            value={
-                              entry.startTime.length === 4
-                                ? `${entry.startTime.substring(
-                                    0,
-                                    2
-                                  )}:${entry.startTime.substring(2, 4)}`
-                                : entry.startTime
-                            }
-                            onChange={(e) => {
-                              const formattedValue = formatEditTimeInput(
-                                e.target.value
-                              );
-                              const formattedTime = formattedValue.replace(
-                                /:/g,
-                                ""
-                              );
-
-                              // Validate the time input
-                              const errorKey = `startTime-${index}`;
-                              if (
-                                formattedValue.length === 5 &&
-                                formattedValue.includes(":")
-                              ) {
-                                if (
-                                  !validateEditTimeInput(
-                                    formattedValue,
-                                    index,
-                                    "startTime"
-                                  )
-                                ) {
-                                  setEditTimeErrors((prev) => ({
-                                    ...prev,
-                                    [errorKey]: "Invalid time format (HH:MM)",
-                                  }));
-                                } else {
-                                  setEditTimeErrors((prev) => ({
-                                    ...prev,
-                                    [errorKey]: "",
-                                  }));
-                                }
-                              } else {
-                                setEditTimeErrors((prev) => ({
-                                  ...prev,
-                                  [errorKey]: "",
-                                }));
-                              }
-
-                              const updatedEntries = [
-                                ...editingSubmission.entries,
-                              ];
-                              updatedEntries[index] = {
-                                ...entry,
-                                startTime: formattedTime,
-                              };
-                              const updatedSubmission = {
-                                ...editingSubmission,
-                                entries: updatedEntries,
-                                totalMinutes: updatedEntries.reduce(
-                                  (total, e) => {
-                                    const startTime =
-                                      e.startTime.length === 4
-                                        ? `${e.startTime.substring(
-                                            0,
-                                            2
-                                          )}:${e.startTime.substring(2, 4)}`
-                                        : e.startTime;
-                                    const endTime =
-                                      e.endTime.length === 4
-                                        ? `${e.endTime.substring(
-                                            0,
-                                            2
-                                          )}:${e.endTime.substring(2, 4)}`
-                                        : e.endTime;
-                                    return (
-                                      total +
-                                      calculateDuration(startTime, endTime)
-                                    );
-                                  },
-                                  0
-                                ),
-                              };
-                              setEditingSubmission(updatedSubmission);
-                            }}
-                            className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-[#003D5B] focus:border-[#003D5B] ${
-                              editTimeErrors[`startTime-${index}`]
-                                ? "border-red-300 bg-red-50"
-                                : "border-slate-300"
-                            }`}
-                            placeholder="HH:MM"
-                          />
-                          {editTimeErrors[`startTime-${index}`] && (
-                            <p className="text-xs text-red-600 mt-1">
-                              {editTimeErrors[`startTime-${index}`]}
-                            </p>
-                          )}
-                        </div>
-                        <div>
-                          <label className="block text-xs text-slate-600 mb-1">
-                            End Time
-                          </label>
-                          <input
-                            type="text"
-                            inputMode="numeric"
-                            value={
-                              entry.endTime.length === 4
-                                ? `${entry.endTime.substring(
-                                    0,
-                                    2
-                                  )}:${entry.endTime.substring(2, 4)}`
-                                : entry.endTime
-                            }
-                            onChange={(e) => {
-                              const formattedValue = formatEditTimeInput(
-                                e.target.value
-                              );
-                              const formattedTime = formattedValue.replace(
-                                /:/g,
-                                ""
-                              );
-
-                              // Validate the time input
-                              const errorKey = `endTime-${index}`;
-                              if (
-                                formattedValue.length === 5 &&
-                                formattedValue.includes(":")
-                              ) {
-                                if (
-                                  !validateEditTimeInput(
-                                    formattedValue,
-                                    index,
-                                    "endTime"
-                                  )
-                                ) {
-                                  setEditTimeErrors((prev) => ({
-                                    ...prev,
-                                    [errorKey]: "Invalid time format (HH:MM)",
-                                  }));
-                                } else {
-                                  setEditTimeErrors((prev) => ({
-                                    ...prev,
-                                    [errorKey]: "",
-                                  }));
-                                }
-                              } else {
-                                setEditTimeErrors((prev) => ({
-                                  ...prev,
-                                  [errorKey]: "",
-                                }));
-                              }
-
-                              const updatedEntries = [
-                                ...editingSubmission.entries,
-                              ];
-                              updatedEntries[index] = {
-                                ...entry,
-                                endTime: formattedTime,
-                              };
-                              const updatedSubmission = {
-                                ...editingSubmission,
-                                entries: updatedEntries,
-                                totalMinutes:
-                                  calculateTotalDuration(updatedEntries)
-                                    .totalMinutes,
-                              };
-                              setEditingSubmission(updatedSubmission);
-                            }}
-                            className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600 ${
-                              editTimeErrors[`endTime-${index}`]
-                                ? "border-red-300 bg-red-50"
-                                : "border-slate-300"
-                            }`}
-                            placeholder="HH:MM"
-                          />
-                          {editTimeErrors[`endTime-${index}`] && (
-                            <p className="text-xs text-red-600 mt-1">
-                              {editTimeErrors[`endTime-${index}`]}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Add New Entry */}
-              <div>
-                <button
-                  onClick={() => {
-                    const newEntry: TimeEntry = {
-                      id: Date.now(),
-                      startTime: "",
-                      endTime: "",
-                    };
-                    const updatedSubmission = {
-                      ...editingSubmission,
-                      entries: [...editingSubmission.entries, newEntry],
-                    };
-                    setEditingSubmission(updatedSubmission);
-                  }}
-                  className="w-full py-2 px-4 border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50 transition-colors"
-                >
-                  + Add Entry
-                </button>
-              </div>
-
-              {/* Preview */}
-              <div className="bg-slate-50 p-3 rounded-md">
-                <h4
-                  className={`text-sm font-medium mb-2 ${
-                    settings.darkMode ? "text-gray-200" : "text-slate-700"
-                  }`}
-                >
-                  Preview
-                </h4>
-                <div className="text-sm text-slate-600 space-y-1">
-                  {editingSubmission.entries.map((entry, index) => {
-                    const startTime =
-                      entry.startTime.length === 4
-                        ? `${entry.startTime.substring(
-                            0,
-                            2
-                          )}:${entry.startTime.substring(2, 4)}`
-                        : entry.startTime;
-                    const endTime =
-                      entry.endTime.length === 4
-                        ? `${entry.endTime.substring(
-                            0,
-                            2
-                          )}:${entry.endTime.substring(2, 4)}`
-                        : entry.endTime;
-                    const duration = calculateDuration(startTime, endTime);
-                    return (
-                      <div key={index} className="flex justify-between">
-                        <span>
-                          {startTime} - {endTime}
-                        </span>
-                        <span className="font-mono">
-                          {formatDurationWithMinutes(duration)}
-                        </span>
-                      </div>
-                    );
-                  })}
-                  <div className="font-medium pt-1 border-t border-slate-200">
-                    Total:{" "}
-                    {formatDurationWithMinutes(
-                      calculateTotalDuration(editingSubmission.entries)
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-3 border-t border-gray-200 flex gap-2">
-              <button
-                onClick={handleCancelEdit}
-                className="flex-1 py-2 px-4 border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  // Check if there are any validation errors
-                  const hasErrors = Object.values(editTimeErrors).some(
-                    (error) => error !== ""
-                  );
-                  if (hasErrors) {
-                    return; // Don't save if there are validation errors
-                  }
-
-                  // Check if all entries have complete, valid times
-                  const hasIncompleteEntries = editingSubmission.entries.some(
-                    (entry) => {
-                      const startTimeFormatted =
-                        entry.startTime.length === 4
-                          ? `${entry.startTime.substring(
-                              0,
-                              2
-                            )}:${entry.startTime.substring(2, 4)}`
-                          : entry.startTime;
-                      const endTimeFormatted =
-                        entry.endTime.length === 4
-                          ? `${entry.endTime.substring(
-                              0,
-                              2
-                            )}:${entry.endTime.substring(2, 4)}`
-                          : entry.endTime;
-
-                      return (
-                        !validateEditTimeInput(
-                          startTimeFormatted,
-                          0,
-                          "startTime"
-                        ) ||
-                        !validateEditTimeInput(
-                          endTimeFormatted,
-                          0,
-                          "endTime"
-                        ) ||
-                        startTimeFormatted.length !== 5 ||
-                        endTimeFormatted.length !== 5
-                      );
-                    }
-                  );
-
-                  if (hasIncompleteEntries) {
-                    return; // Don't save if any entries are incomplete
-                  }
-
-                  handleSaveEdit(editingSubmission);
-                }}
-                disabled={
-                  Object.values(editTimeErrors).some((error) => error !== "") ||
-                  editingSubmission.entries.some((entry) => {
-                    const startTimeFormatted =
-                      entry.startTime.length === 4
-                        ? `${entry.startTime.substring(
-                            0,
-                            2
-                          )}:${entry.startTime.substring(2, 4)}`
-                        : entry.startTime;
-                    const endTimeFormatted =
-                      entry.endTime.length === 4
-                        ? `${entry.endTime.substring(
-                            0,
-                            2
-                          )}:${entry.endTime.substring(2, 4)}`
-                        : entry.endTime;
-
-                    return (
-                      !validateEditTimeInput(
-                        startTimeFormatted,
-                        0,
-                        "startTime"
-                      ) ||
-                      !validateEditTimeInput(endTimeFormatted, 0, "endTime") ||
-                      startTimeFormatted.length !== 5 ||
-                      endTimeFormatted.length !== 5
-                    );
-                  })
-                }
-                className="flex-1 py-2 px-4 bg-gray-700 text-white rounded-md hover:bg-gray-600 transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed"
-              >
-                Save Changes
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <EditSubmissionModal
+        visible={showEditModal}
+        editingSubmission={editingSubmission}
+        editTimeErrors={editTimeErrors}
+        settings={settings}
+        onCancel={handleCancelEdit}
+        onSave={handleSaveEdit}
+        onSubmissionChange={setEditingSubmission}
+        onEditTimeErrorsChange={setEditTimeErrors}
+        validateEditTimeInput={validateEditTimeInput}
+        formatEditTimeInput={formatEditTimeInput}
+        calculateDuration={calculateDuration}
+        formatDurationWithMinutes={formatDurationWithMinutes}
+        calculateTotalDuration={calculateTotalDuration}
+      />
 
       {/* Time Format Modal */}
-      {showTimeFormatModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2">
-          <div className="bg-white rounded-lg w-full max-w-sm mx-auto">
-            <div className="p-3 border-b border-gray-200">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-bold text-slate-800">
-                  Time Input Format
-                </h3>
-                <button
-                  onClick={() => setShowTimeFormatModal(false)}
-                  className="text-slate-400 hover:text-slate-600"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-
-            <div className="p-3 space-y-3">
-              <div>
-                <h4
-                  className={`font-medium mb-2 ${
-                    settings.darkMode ? "text-gray-200" : "text-slate-700"
-                  }`}
-                >
-                  24-Hour Format
-                </h4>
-                <p
-                  className={`text-sm leading-relaxed ${
-                    settings.darkMode ? "text-gray-300" : "text-slate-600"
-                  }`}
-                >
-                  Enter times using 24-hour format (HH:MM). This means 1:00 PM
-                  is 13:00, 2:30 PM is 14:30, and midnight is 00:00.
-                </p>
-              </div>
-
-              <div>
-                <h4
-                  className={`font-medium mb-2 ${
-                    settings.darkMode ? "text-gray-200" : "text-slate-700"
-                  }`}
-                >
-                  Valid Examples
-                </h4>
-                <div className="text-sm text-slate-600 space-y-1">
-                  <p>
-                    • <strong>09:30</strong> - 9:30 AM
-                  </p>
-                  <p>
-                    • <strong>13:45</strong> - 1:45 PM
-                  </p>
-                  <p>
-                    • <strong>17:00</strong> - 5:00 PM
-                  </p>
-                  <p>
-                    • <strong>00:00</strong> - Midnight
-                  </p>
-                  <p>
-                    • <strong>23:59</strong> - 11:59 PM
-                  </p>
-                </div>
-              </div>
-
-              <div>
-                <h4
-                  className={`font-medium mb-2 ${
-                    settings.darkMode ? "text-gray-200" : "text-slate-700"
-                  }`}
-                >
-                  Common Mistakes
-                </h4>
-                <div className="text-sm text-slate-600 space-y-1">
-                  <p>• Don't use AM/PM (use 13:00, not 1:00 PM)</p>
-                  <p>• Always use two digits (09:30, not 9:30)</p>
-                  <p>• Use colon separator (09:30, not 0930)</p>
-                </div>
-              </div>
-
-              <div className="pt-2 border-t border-gray-200">
-                <p
-                  className={`text-xs ${
-                    settings.darkMode ? "text-gray-400" : "text-slate-500"
-                  }`}
-                >
-                  💡 <strong>Tip:</strong> For overnight shifts, end time can be
-                  after midnight (e.g., 06:00 for 6 AM the next day).
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <TimeFormatModal
+        visible={showTimeFormatModal}
+        settings={settings}
+        onClose={() => setShowTimeFormatModal(false)}
+      />
 
       {/* Submission Info Modal */}
-      {showSubmissionInfoModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2">
-          <div className="bg-white rounded-lg w-full max-w-sm mx-auto">
-            <div className="p-3 border-b border-gray-200">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-bold text-slate-800">
-                  What’s a submission?
-                </h3>
-                <button
-                  onClick={() => setShowSubmissionInfoModal(false)}
-                  className="text-slate-400 hover:text-slate-600"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-            <div className="p-3 space-y-3">
-              <p
-                className={`text-sm leading-relaxed ${
-                  settings.darkMode ? "text-gray-300" : "text-slate-600"
-                }`}
-              >
-                Submissions are a snapshot of the current entries. When you
-                submit entries, your current entries are saved to History so you
-                can review totals later.
-              </p>
-              <p
-                className={`text-sm leading-relaxed ${
-                  settings.darkMode ? "text-gray-300" : "text-slate-600"
-                }`}
-              >
-                You can keep adding entries during the day and submit multiple
-                entries for a day and they will be added to the days History and
-                show the total. You can also save pay in the Pay tab; it uses
-                your tracked time for that date. (If in time tracker mode)
-              </p>
-            </div>
-            <div className="p-3 border-t border-gray-200 text-right">
-              <button
-                onClick={() => setShowSubmissionInfoModal(false)}
-                className="py-1.5 px-3 bg-gray-700 text-white rounded-md hover:bg-gray-600"
-              >
-                Got it
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <SubmissionInfoModal
+        visible={showSubmissionInfoModal}
+        settings={settings}
+        onClose={() => setShowSubmissionInfoModal(false)}
+      />
     </div>
   );
 };

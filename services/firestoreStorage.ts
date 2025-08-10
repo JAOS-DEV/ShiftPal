@@ -243,6 +243,73 @@ export async function updateUserRole(
   }
 }
 
+export async function updateSubscriptionExpiry(
+  uid: string,
+  proUntil: string | null
+): Promise<void> {
+  const now = new Date().toISOString();
+  const updateData: any = {
+    updatedAt: now,
+  };
+
+  if (proUntil) {
+    updateData.proUntil = proUntil;
+  } else {
+    // Remove proUntil field if setting to null
+    updateData.proUntil = deleteField();
+  }
+
+  await updateDoc(doc(db, "users", uid, "profile", "user"), updateData);
+
+  // Write admin audit log
+  try {
+    await addDoc(collection(db, "adminLogs"), {
+      targetUid: uid,
+      action: "subscription_expiry_update",
+      newExpiry: proUntil,
+      changedByUid: auth.currentUser?.uid ?? null,
+      changedByEmail: auth.currentUser?.email ?? null,
+      at: serverTimestamp(),
+    });
+  } catch (e) {
+    // Non-fatal; logging best effort
+    console.warn("Failed to log admin action", e);
+  }
+}
+
+export async function checkAndDowngradeExpiredSubscriptions(): Promise<{
+  downgraded: number;
+  errors: string[];
+}> {
+  const errors: string[] = [];
+  let downgraded = 0;
+
+  try {
+    const users = await getAllUsers();
+    const now = new Date();
+
+    for (const user of users) {
+      if (user.proUntil && (user.role === "pro" || user.role === "beta")) {
+        const expiryDate = new Date(user.proUntil);
+
+        if (expiryDate < now) {
+          try {
+            await updateUserRole(user.uid, "free");
+            await updateSubscriptionExpiry(user.uid, null);
+            downgraded++;
+          } catch (error) {
+            errors.push(`Failed to downgrade ${user.email}: ${error}`);
+          }
+        }
+      }
+    }
+  } catch (error) {
+    errors.push(`Failed to check subscriptions: ${error}`);
+  }
+
+  return { downgraded, errors };
+}
+
 export async function getAllUsers(): Promise<UserProfile[]> {
   try {
     const usersSnap = await getDocs(collection(db, "users"));
@@ -263,11 +330,21 @@ export async function getAllUsers(): Promise<UserProfile[]> {
   }
 }
 
-export function isPremium(userProfile: UserProfile | null): boolean {
+export function isPro(userProfile: UserProfile | null): boolean {
   if (!userProfile) return false;
   if (userProfile.role === "admin") return true;
-  if (userProfile.role === "premium") return true;
-  if (userProfile.role === "beta") return true;
+
+  // Check if pro/beta subscription has expired
+  if (userProfile.role === "pro" || userProfile.role === "beta") {
+    if (userProfile.proUntil) {
+      const expiryDate = new Date(userProfile.proUntil);
+      const now = new Date();
+      return expiryDate > now; // Only pro if not expired
+    }
+    // If no expiry date, assume permanent subscription
+    return true;
+  }
+
   return false;
 }
 

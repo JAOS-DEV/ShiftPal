@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { UserProfile, UserRole, Settings } from "../types";
-import { getAllUsers, updateUserRole } from "../services/firestoreStorage";
+import {
+  getAllUsers,
+  updateUserRole,
+  checkAndDowngradeExpiredSubscriptions,
+} from "../services/firestoreStorage";
 import type { User } from "firebase/auth";
+import SubscriptionExpiryModal from "./SubscriptionExpiryModal";
 
 interface AdminPanelProps {
   user: User;
@@ -13,6 +18,14 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ user, settings }) => {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [selectedUserForExpiry, setSelectedUserForExpiry] =
+    useState<UserProfile | null>(null);
+  const [checkingExpired, setCheckingExpired] = useState(false);
+  const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "active" | "expired" | "no-sub"
+  >("all");
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     loadUsers();
@@ -57,12 +70,49 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ user, settings }) => {
     }
   };
 
+  const handleCheckExpiredSubscriptions = async () => {
+    try {
+      setCheckingExpired(true);
+      const result = await checkAndDowngradeExpiredSubscriptions();
+
+      if (result.downgraded > 0) {
+        showToast(`${result.downgraded} expired subscriptions downgraded`);
+        await loadUsers(); // Refresh the user list
+      } else {
+        showToast("No expired subscriptions found");
+      }
+
+      if (result.errors.length > 0) {
+        console.error("Errors during subscription check:", result.errors);
+        showToast(`Check completed with ${result.errors.length} errors`);
+      }
+    } catch (error) {
+      console.error("Error checking expired subscriptions:", error);
+      showToast("Failed to check expired subscriptions");
+    } finally {
+      setCheckingExpired(false);
+    }
+  };
+
+  const getExpiryStatus = (userProfile: UserProfile) => {
+    if (!userProfile.proUntil) return null;
+
+    const expiryDate = new Date(userProfile.proUntil);
+    const now = new Date();
+    const isExpired = expiryDate < now;
+    const daysUntilExpiry = Math.ceil(
+      (expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    return { isExpired, daysUntilExpiry, expiryDate };
+  };
+
   const getRoleBadgeColor = (role: UserRole) => {
     if (settings.darkMode) {
       switch (role) {
         case "admin":
           return "bg-red-900/50 text-red-300 border-red-700";
-        case "premium":
+        case "pro":
           return "bg-green-900/50 text-green-300 border-green-700";
         case "beta":
           return "bg-indigo-900/50 text-indigo-300 border-indigo-700";
@@ -75,7 +125,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ user, settings }) => {
       switch (role) {
         case "admin":
           return "bg-red-100 text-red-800 border-red-200";
-        case "premium":
+        case "pro":
           return "bg-green-100 text-green-800 border-green-200";
         case "beta":
           return "bg-indigo-100 text-indigo-800 border-indigo-200";
@@ -85,6 +135,43 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ user, settings }) => {
           return "bg-gray-100 text-gray-800 border-gray-200";
       }
     }
+  };
+
+  const getFilteredUsers = () => {
+    return users.filter((userProfile) => {
+      // Role filter
+      if (roleFilter !== "all" && userProfile.role !== roleFilter) {
+        return false;
+      }
+
+      // Status filter
+      if (statusFilter !== "all") {
+        const expiryStatus = getExpiryStatus(userProfile);
+        if (statusFilter === "active") {
+          if (!userProfile.proUntil || expiryStatus?.isExpired) {
+            return false;
+          }
+        } else if (statusFilter === "expired") {
+          if (!userProfile.proUntil || !expiryStatus?.isExpired) {
+            return false;
+          }
+        } else if (statusFilter === "no-sub") {
+          if (userProfile.proUntil) {
+            return false;
+          }
+        }
+      }
+
+      // Search filter
+      if (
+        searchTerm &&
+        !userProfile.email.toLowerCase().includes(searchTerm.toLowerCase())
+      ) {
+        return false;
+      }
+
+      return true;
+    });
   };
 
   if (loading) {
@@ -147,93 +234,157 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ user, settings }) => {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-4 gap-2 text-center">
-            <div
-              className={`rounded-lg p-2 border ${
-                settings.darkMode
-                  ? "bg-gray-800/50 border-gray-700/80"
-                  : "bg-white/50 border-gray-200/80"
+          <div className="space-y-2">
+            <h3
+              className={`text-sm font-bold ${
+                settings.darkMode ? "text-gray-200" : "text-slate-700"
               }`}
             >
+              Account Statistics
+            </h3>
+            <div className="grid grid-cols-6 gap-1">
               <div
-                className={`text-lg font-bold ${
-                  settings.darkMode ? "text-gray-100" : "text-slate-800"
+                className={`rounded p-1.5 border text-center ${
+                  settings.darkMode
+                    ? "bg-gray-800/50 border-gray-700/80"
+                    : "bg-white/50 border-gray-200/80"
                 }`}
               >
-                {users.filter((u) => u.role === "free").length}
+                <div
+                  className={`text-sm font-bold ${
+                    settings.darkMode ? "text-gray-100" : "text-slate-800"
+                  }`}
+                >
+                  {users.filter((u) => u.role === "free").length}
+                </div>
+                <div
+                  className={`text-xs ${
+                    settings.darkMode ? "text-gray-400" : "text-slate-500"
+                  }`}
+                >
+                  Free
+                </div>
               </div>
               <div
-                className={`text-xs ${
-                  settings.darkMode ? "text-gray-400" : "text-slate-500"
+                className={`rounded p-1.5 border text-center ${
+                  settings.darkMode
+                    ? "bg-gray-800/50 border-gray-700/80"
+                    : "bg-white/50 border-gray-200/80"
                 }`}
               >
-                Free Users
-              </div>
-            </div>
-            <div
-              className={`rounded-lg p-2 border ${
-                settings.darkMode
-                  ? "bg-gray-800/50 border-gray-700/80"
-                  : "bg-white/50 border-gray-200/80"
-              }`}
-            >
-              <div
-                className={`text-lg font-bold ${
-                  settings.darkMode ? "text-gray-100" : "text-slate-800"
-                }`}
-              >
-                {users.filter((u) => u.role === "premium").length}
-              </div>
-              <div
-                className={`text-xs ${
-                  settings.darkMode ? "text-gray-400" : "text-slate-500"
-                }`}
-              >
-                Premium Users
-              </div>
-            </div>
-            <div
-              className={`rounded-lg p-2 border ${
-                settings.darkMode
-                  ? "bg-gray-800/50 border-gray-700/80"
-                  : "bg-white/50 border-gray-200/80"
-              }`}
-            >
-              <div
-                className={`text-lg font-bold ${
-                  settings.darkMode ? "text-gray-100" : "text-slate-800"
-                }`}
-              >
-                {users.filter((u) => u.role === "beta").length}
+                <div
+                  className={`text-sm font-bold ${
+                    settings.darkMode ? "text-gray-100" : "text-slate-800"
+                  }`}
+                >
+                  {users.filter((u) => u.role === "pro").length}
+                </div>
+                <div
+                  className={`text-xs ${
+                    settings.darkMode ? "text-gray-400" : "text-slate-500"
+                  }`}
+                >
+                  Pro
+                </div>
               </div>
               <div
-                className={`text-xs ${
-                  settings.darkMode ? "text-gray-400" : "text-slate-500"
+                className={`rounded p-1.5 border text-center ${
+                  settings.darkMode
+                    ? "bg-gray-800/50 border-gray-700/80"
+                    : "bg-white/50 border-gray-200/80"
                 }`}
               >
-                Beta Testers
+                <div
+                  className={`text-sm font-bold ${
+                    settings.darkMode ? "text-gray-100" : "text-slate-800"
+                  }`}
+                >
+                  {users.filter((u) => u.role === "beta").length}
+                </div>
+                <div
+                  className={`text-xs ${
+                    settings.darkMode ? "text-gray-400" : "text-slate-500"
+                  }`}
+                >
+                  Beta
+                </div>
               </div>
-            </div>
-            <div
-              className={`rounded-lg p-2 border ${
-                settings.darkMode
-                  ? "bg-gray-800/50 border-gray-700/80"
-                  : "bg-white/50 border-gray-200/80"
-              }`}
-            >
               <div
-                className={`text-lg font-bold ${
-                  settings.darkMode ? "text-gray-100" : "text-slate-800"
+                className={`rounded p-1.5 border text-center ${
+                  settings.darkMode
+                    ? "bg-gray-800/50 border-gray-700/80"
+                    : "bg-white/50 border-gray-200/80"
                 }`}
               >
-                {users.filter((u) => u.role === "admin").length}
+                <div
+                  className={`text-sm font-bold ${
+                    settings.darkMode ? "text-gray-100" : "text-slate-800"
+                  }`}
+                >
+                  {users.filter((u) => u.role === "admin").length}
+                </div>
+                <div
+                  className={`text-xs ${
+                    settings.darkMode ? "text-gray-400" : "text-slate-500"
+                  }`}
+                >
+                  Admin
+                </div>
               </div>
               <div
-                className={`text-xs ${
-                  settings.darkMode ? "text-gray-400" : "text-slate-500"
+                className={`rounded p-1.5 border text-center ${
+                  settings.darkMode
+                    ? "bg-gray-800/50 border-gray-700/80"
+                    : "bg-white/50 border-gray-200/80"
                 }`}
               >
-                Admins
+                <div
+                  className={`text-sm font-bold ${
+                    settings.darkMode ? "text-gray-100" : "text-slate-800"
+                  }`}
+                >
+                  {
+                    users.filter(
+                      (u) => u.proUntil && new Date(u.proUntil) < new Date()
+                    ).length
+                  }
+                </div>
+                <div
+                  className={`text-xs ${
+                    settings.darkMode ? "text-gray-400" : "text-slate-500"
+                  }`}
+                >
+                  Expired
+                </div>
+              </div>
+              <div
+                className={`rounded p-1.5 border text-center ${
+                  settings.darkMode
+                    ? "bg-gray-800/50 border-gray-700/80"
+                    : "bg-white/50 border-gray-200/80"
+                }`}
+              >
+                <div
+                  className={`text-sm font-bold ${
+                    settings.darkMode ? "text-gray-100" : "text-slate-800"
+                  }`}
+                >
+                  {
+                    users.filter(
+                      (u) =>
+                        u.role === "pro" &&
+                        u.proUntil &&
+                        new Date(u.proUntil) >= new Date()
+                    ).length
+                  }
+                </div>
+                <div
+                  className={`text-xs ${
+                    settings.darkMode ? "text-gray-400" : "text-slate-500"
+                  }`}
+                >
+                  Active
+                </div>
               </div>
             </div>
           </div>
@@ -251,62 +402,207 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ user, settings }) => {
                 settings.darkMode ? "text-gray-200" : "text-slate-700"
               }`}
             >
-              Users
+              Users ({getFilteredUsers().length})
             </h3>
-            <div className="space-y-2">
-              {users.map((userProfile) => (
-                <div
-                  key={userProfile.uid}
-                  className={`flex items-center justify-between p-2 rounded border ${
+
+            {/* Filters */}
+            <div className="space-y-2 mb-3">
+              {/* Search */}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Search by email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className={`flex-1 text-xs border rounded px-2 py-1 ${
                     settings.darkMode
-                      ? "bg-gray-700/50 border-gray-600/50"
-                      : "bg-white/50 border-gray-200/50"
+                      ? "bg-gray-800 border-gray-600 text-gray-100 placeholder-gray-400"
+                      : "bg-white border-slate-300 text-slate-800 placeholder-slate-500"
+                  }`}
+                />
+              </div>
+
+              {/* Role and Status Filters */}
+              <div className="flex gap-2">
+                <select
+                  value={roleFilter}
+                  onChange={(e) =>
+                    setRoleFilter(e.target.value as UserRole | "all")
+                  }
+                  className={`text-xs border rounded px-2 py-1 ${
+                    settings.darkMode
+                      ? "bg-gray-800 border-gray-600 text-gray-100"
+                      : "bg-white border-slate-300 text-slate-800"
                   }`}
                 >
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm font-medium truncate">
-                      {userProfile.email}
+                  <option value="all">All Roles</option>
+                  <option value="free">Free</option>
+                  <option value="pro">Pro</option>
+                  <option value="beta">Beta</option>
+                  <option value="admin">Admin</option>
+                </select>
+
+                <select
+                  value={statusFilter}
+                  onChange={(e) =>
+                    setStatusFilter(
+                      e.target.value as "all" | "active" | "expired" | "no-sub"
+                    )
+                  }
+                  className={`text-xs border rounded px-2 py-1 ${
+                    settings.darkMode
+                      ? "bg-gray-800 border-gray-600 text-gray-100"
+                      : "bg-white border-slate-300 text-slate-800"
+                  }`}
+                >
+                  <option value="all">All Status</option>
+                  <option value="active">Active Subs</option>
+                  <option value="expired">Expired Subs</option>
+                  <option value="no-sub">No Subscription</option>
+                </select>
+
+                {/* Clear Filters */}
+                {(roleFilter !== "all" ||
+                  statusFilter !== "all" ||
+                  searchTerm) && (
+                  <button
+                    onClick={() => {
+                      setRoleFilter("all");
+                      setStatusFilter("all");
+                      setSearchTerm("");
+                    }}
+                    className={`text-xs px-2 py-1 rounded border transition-colors ${
+                      settings.darkMode
+                        ? "border-gray-600 text-gray-300 hover:bg-gray-700"
+                        : "border-slate-300 text-slate-700 hover:bg-slate-50"
+                    }`}
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              {getFilteredUsers().length > 0 ? (
+                getFilteredUsers().map((userProfile) => (
+                  <div
+                    key={userProfile.uid}
+                    className={`flex items-center justify-between p-2 rounded border ${
+                      settings.darkMode
+                        ? "bg-gray-700/50 border-gray-600/50"
+                        : "bg-white/50 border-gray-200/50"
+                    }`}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium truncate">
+                        {userProfile.email}
+                      </div>
+                      <div
+                        className={`text-xs ${
+                          settings.darkMode ? "text-gray-400" : "text-slate-500"
+                        }`}
+                      >
+                        Created:{" "}
+                        {new Date(userProfile.createdAt).toLocaleDateString()}
+                      </div>
                     </div>
-                    <div
-                      className={`text-xs ${
-                        settings.darkMode ? "text-gray-400" : "text-slate-500"
-                      }`}
-                    >
-                      Created:{" "}
-                      {new Date(userProfile.createdAt).toLocaleDateString()}
+                    <div className="flex items-center gap-2">
+                      <div className="flex flex-col items-end gap-1">
+                        <span
+                          className={`px-1.5 py-0.5 rounded-full border text-xs font-medium ${getRoleBadgeColor(
+                            userProfile.role
+                          )}`}
+                        >
+                          {userProfile.role}
+                        </span>
+                        {userProfile.proUntil && (
+                          <div className="text-xs">
+                            <span
+                              className={`${
+                                getExpiryStatus(userProfile)?.isExpired
+                                  ? settings.darkMode
+                                    ? "text-red-400"
+                                    : "text-red-600"
+                                  : settings.darkMode
+                                  ? "text-green-400"
+                                  : "text-green-600"
+                              }`}
+                            >
+                              {getExpiryStatus(userProfile)?.isExpired
+                                ? "Expired"
+                                : `${
+                                    getExpiryStatus(userProfile)
+                                      ?.daysUntilExpiry
+                                  }d left`}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <select
+                          value={userProfile.role}
+                          onChange={(e) =>
+                            handleRoleUpdate(
+                              userProfile.uid,
+                              e.target.value as UserRole
+                            )
+                          }
+                          disabled={updating === userProfile.uid}
+                          className={`text-xs border rounded px-1 py-0.5 ${
+                            settings.darkMode
+                              ? "bg-gray-800 border-gray-600 text-gray-100"
+                              : "bg-white border-slate-300 text-slate-800"
+                          }`}
+                        >
+                          <option value="free">Free</option>
+                          <option value="pro">Pro</option>
+                          <option value="beta">Beta Tester</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                        {(userProfile.role === "pro" ||
+                          userProfile.role === "beta") && (
+                          <button
+                            onClick={() =>
+                              setSelectedUserForExpiry(userProfile)
+                            }
+                            className={`text-xs px-2 py-0.5 rounded border transition-colors ${
+                              settings.darkMode
+                                ? "border-gray-600 text-gray-300 hover:bg-gray-700"
+                                : "border-slate-300 text-slate-700 hover:bg-slate-50"
+                            }`}
+                          >
+                            Expiry
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`px-2 py-1 rounded-full border text-xs font-medium ${getRoleBadgeColor(
-                        userProfile.role
-                      )}`}
-                    >
-                      {userProfile.role}
-                    </span>
-                    <select
-                      value={userProfile.role}
-                      onChange={(e) =>
-                        handleRoleUpdate(
-                          userProfile.uid,
-                          e.target.value as UserRole
-                        )
-                      }
-                      disabled={updating === userProfile.uid}
-                      className={`text-xs border rounded px-1 py-0.5 ${
-                        settings.darkMode
-                          ? "bg-gray-800 border-gray-600 text-gray-100"
-                          : "bg-white border-slate-300 text-slate-800"
-                      }`}
-                    >
-                      <option value="free">Free</option>
-                      <option value="premium">Premium</option>
-                      <option value="beta">Beta Tester</option>
-                      <option value="admin">Admin</option>
-                    </select>
+                ))
+              ) : (
+                <div
+                  className={`p-4 text-center rounded border ${
+                    settings.darkMode
+                      ? "bg-gray-700/30 border-gray-600/50"
+                      : "bg-white/30 border-gray-200/50"
+                  }`}
+                >
+                  <div
+                    className={`text-sm font-medium mb-1 ${
+                      settings.darkMode ? "text-gray-300" : "text-slate-700"
+                    }`}
+                  >
+                    No users found
+                  </div>
+                  <div
+                    className={`text-xs ${
+                      settings.darkMode ? "text-gray-400" : "text-slate-500"
+                    }`}
+                  >
+                    Try adjusting your filters or search terms
                   </div>
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
@@ -336,10 +632,32 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ user, settings }) => {
               >
                 Refresh Users
               </button>
+              <button
+                onClick={handleCheckExpiredSubscriptions}
+                disabled={checkingExpired}
+                className={`w-full font-bold py-1.5 px-3 rounded-md transition-colors text-sm ${
+                  settings.darkMode
+                    ? "bg-orange-600 text-white hover:bg-orange-500 disabled:bg-orange-800"
+                    : "bg-orange-500 text-white hover:bg-orange-600 disabled:bg-orange-300"
+                }`}
+              >
+                {checkingExpired ? "Checking..." : "Check Expired Subs"}
+              </button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Subscription Expiry Modal */}
+      {selectedUserForExpiry && (
+        <SubscriptionExpiryModal
+          user={selectedUserForExpiry}
+          isOpen={!!selectedUserForExpiry}
+          onClose={() => setSelectedUserForExpiry(null)}
+          onUpdate={loadUsers}
+          settings={settings}
+        />
+      )}
     </div>
   );
 };

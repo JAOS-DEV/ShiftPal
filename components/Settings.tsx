@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import { Settings as SettingsType, StandardRate, OvertimeRate } from "../types";
 import type { User } from "firebase/auth";
 import { signOutUser } from "../services/firebase";
-import { isPremium } from "../services/firestoreStorage";
+import { isPro } from "../services/firestoreStorage";
 import { UserProfile } from "../types";
 import UpgradeModal from "./UpgradeModal";
 
@@ -34,33 +34,31 @@ const Settings: React.FC<SettingsProps> = ({
     setSettings({ ...settings, ...updates });
   };
 
-  // Reusable premium badge
-  const PremiumBadge: React.FC<{ text?: string }> = ({
-    text = "Premium feature",
-  }) => (
-    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-[10px] font-semibold bg-amber-100 text-amber-800 border-amber-200">
+  // Reusable pro badge
+  const ProBadge: React.FC<{ text?: string }> = ({ text = "Pro feature" }) => (
+    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-[10px] font-semibold bg-amber-100 text-amber-800 border-amber-200 whitespace-nowrap">
       {text}
     </span>
   );
 
-  // Premium status checks
-  const userIsPremium = isPremium(userProfile);
+  // Pro status checks
+  const userIsPro = isPro(userProfile);
   const canAddStandardRate =
-    userIsPremium || (settings.standardRates?.length || 0) < 1;
+    userIsPro || (settings.standardRates?.length || 0) < 1;
   const canAddOvertimeRate =
-    userIsPremium || (settings.overtimeRates?.length || 0) < 1;
-  const canUseCloudStorage = userIsPremium;
-  const canUseTaxCalculations = userIsPremium;
-  const canExportCSV = userIsPremium;
+    userIsPro || (settings.overtimeRates?.length || 0) < 1;
+  const canUseCloudStorage = userIsPro;
+  const canUseTaxCalculations = userIsPro;
+  const canExportCSV = userIsPro;
 
   const openUpgrade = (feature: string) => {
     setUpgradeFeature(feature);
     setUpgradeOpen(true);
   };
 
-  // Normalize settings if user loses premium
+  // Normalize settings if user loses pro
   useEffect(() => {
-    if (userIsPremium) return;
+    if (userIsPro) return;
     const updates: Partial<SettingsType> = {};
     let changed = false;
 
@@ -88,12 +86,12 @@ const Settings: React.FC<SettingsProps> = ({
 
     if (changed) updateSettings(updates);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userIsPremium]);
+  }, [userIsPro]);
 
   // For downgraded free users: allow one-time download if cloud data exists
   useEffect(() => {
     const run = async () => {
-      if (!user || userIsPremium) return;
+      if (!user || userIsPro) return;
       try {
         const { cloudDataExists, getFreeDownloadConsumed } = await import(
           "../services/firestoreStorage"
@@ -109,7 +107,7 @@ const Settings: React.FC<SettingsProps> = ({
       }
     };
     run();
-  }, [user, userIsPremium]);
+  }, [user, userIsPro]);
 
   const lastSyncedDisplay = useMemo(() => {
     if (!settings.lastSyncAt) return "—";
@@ -135,9 +133,9 @@ const Settings: React.FC<SettingsProps> = ({
         label: "Admin",
         classes: "bg-red-100 text-red-800 border-red-200",
       };
-    if (role === "premium")
+    if (role === "pro")
       return {
-        label: "Premium",
+        label: "Pro",
         classes: "bg-green-100 text-green-800 border-green-200",
       };
     if (role === "beta")
@@ -216,8 +214,8 @@ const Settings: React.FC<SettingsProps> = ({
                 - Turning Cloud Sync OFF keeps your data on this device only.
               </p>
               <p>
-                - Free users: Cloud is a premium feature. If you used Cloud
-                before, you can download your data once to this device.
+                - Free users: Cloud is a pro feature. If you used Cloud before,
+                you can download your data once to this device.
               </p>
             </div>
             <div
@@ -553,13 +551,13 @@ const Settings: React.FC<SettingsProps> = ({
               </button>
               {!canAddStandardRate && (
                 <div className="flex items-center gap-1 mt-1">
-                  <PremiumBadge text="Premium required" />
+                  <ProBadge text="Pro required" />
                   <span
                     className={`text-[11px] ${
                       settings.darkMode ? "text-gray-400" : "text-slate-500"
                     }`}
                   >
-                    More than 1 standard rate requires Premium.
+                    More than 1 standard rate requires Pro.
                   </span>
                 </div>
               )}
@@ -679,13 +677,13 @@ const Settings: React.FC<SettingsProps> = ({
               </button>
               {!canAddOvertimeRate && (
                 <div className="flex items-center gap-1 mt-1">
-                  <PremiumBadge text="Premium required" />
+                  <ProBadge text="Pro required" />
                   <span
                     className={`text-[11px] ${
                       settings.darkMode ? "text-gray-400" : "text-slate-500"
                     }`}
                   >
-                    More than 1 overtime rate requires Premium.
+                    More than 1 overtime rate requires Pro.
                   </span>
                 </div>
               )}
@@ -726,7 +724,7 @@ const Settings: React.FC<SettingsProps> = ({
                   </p>
                   {!canUseTaxCalculations && (
                     <div className="mt-1">
-                      <PremiumBadge />
+                      <ProBadge />
                     </div>
                   )}
                 </div>
@@ -841,7 +839,7 @@ const Settings: React.FC<SettingsProps> = ({
                   </p>
                   {!canUseTaxCalculations && (
                     <div className="mt-1">
-                      <PremiumBadge />
+                      <ProBadge />
                     </div>
                   )}
                 </div>
@@ -1062,7 +1060,7 @@ const Settings: React.FC<SettingsProps> = ({
                   </p>
                   {!canUseCloudStorage && (
                     <div className="mt-1">
-                      <PremiumBadge />
+                      <ProBadge />
                     </div>
                   )}
                 </div>
@@ -1227,7 +1225,7 @@ const Settings: React.FC<SettingsProps> = ({
                   title={
                     canUseCloudStorage
                       ? "Upload this device's data to cloud"
-                      : "Premium required"
+                      : "Pro required"
                   }
                   className={`w-full py-1 px-2 rounded border transition-colors text-xs ${
                     canUseCloudStorage
@@ -1299,7 +1297,7 @@ const Settings: React.FC<SettingsProps> = ({
                     canUseCloudStorage ||
                     (hasCloudData && !freeDownloadConsumed)
                       ? "Download cloud data to this device"
-                      : "Premium required"
+                      : "Pro required"
                   }
                   className={`w-full py-1 px-2 rounded border transition-colors text-xs ${
                     canUseCloudStorage ||
@@ -1368,7 +1366,7 @@ const Settings: React.FC<SettingsProps> = ({
                 onClick={() => setUpgradeOpen(true)}
                 aria-label="Export Pay History (CSV)"
                 title={
-                  canExportCSV ? "Export Pay History (CSV)" : "Premium required"
+                  canExportCSV ? "Export Pay History (CSV)" : "Pro required"
                 }
                 className={`w-full font-bold py-1.5 px-3 rounded-md transition-colors text-sm ${
                   canExportCSV
@@ -1376,12 +1374,11 @@ const Settings: React.FC<SettingsProps> = ({
                     : "bg-blue-300 text-white cursor-not-allowed"
                 }`}
               >
-                Export Pay History (CSV){" "}
-                {canExportCSV ? "" : "(Premium required)"}
+                Export Pay History (CSV) {canExportCSV ? "" : "(Pro required)"}
               </button>
               {!canExportCSV && (
                 <div className="mt-1">
-                  <PremiumBadge text="Premium required" />
+                  <ProBadge text="Pro required" />
                 </div>
               )}
               <p
@@ -1479,9 +1476,9 @@ const Settings: React.FC<SettingsProps> = ({
                 href={`mailto:${encodeURIComponent(
                   "jaosullivan0@gmail.com"
                 )}?subject=${encodeURIComponent(
-                  "Driver Buddy - Premium access request"
+                  "Driver Buddy - Pro access request"
                 )}&body=${encodeURIComponent(
-                  `Hi,\n\nI'd like premium access.\n\nDiagnostics:\nUID: ${
+                  `Hi,\n\nI'd like pro access.\n\nDiagnostics:\nUID: ${
                     user?.uid || "n/a"
                   }\nRole: ${userProfile?.role || "n/a"}\n\nThanks!`
                 )}`}
@@ -1491,7 +1488,7 @@ const Settings: React.FC<SettingsProps> = ({
                     : "bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200"
                 }`}
               >
-                Request Premium Access
+                Request Pro Access
               </a>
               <a
                 href={`mailto:${encodeURIComponent(
