@@ -40,7 +40,15 @@ if (!firebaseConfig.projectId) {
   console.log("Environment variables:", {
     VITE_FIREBASE_PROJECT_ID: import.meta.env.VITE_FIREBASE_PROJECT_ID,
     VITE_FIREBASE_AUTH_DOMAIN: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-    VITE_FIREBASE_API_KEY: import.meta.env.VITE_FIREBASE_API_KEY ? "present" : "missing",
+    VITE_FIREBASE_API_KEY: import.meta.env.VITE_FIREBASE_API_KEY
+      ? "present"
+      : "missing",
+  });
+} else {
+  console.log("✅ Firebase configuration loaded successfully:", {
+    projectId: firebaseConfig.projectId,
+    authDomain: firebaseConfig.authDomain,
+    apiKey: firebaseConfig.apiKey ? "present" : "missing",
   });
 }
 
