@@ -1,4 +1,5 @@
 import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
 import {
   initializeFirestore,
   persistentLocalCache,
@@ -15,28 +16,25 @@ import {
   type User,
 } from "firebase/auth";
 
-const runtimeConfig = (window as any).__FIREBASE_CONFIG__ || {};
 const firebaseConfig = {
-  apiKey:
-    (import.meta.env.VITE_FIREBASE_API_KEY as string) || runtimeConfig.apiKey,
-  authDomain:
-    (import.meta.env.VITE_FIREBASE_AUTH_DOMAIN as string) ||
-    runtimeConfig.authDomain,
-  projectId:
-    (import.meta.env.VITE_FIREBASE_PROJECT_ID as string) ||
-    runtimeConfig.projectId,
-  storageBucket:
-    (import.meta.env.VITE_FIREBASE_STORAGE_BUCKET as string) ||
-    runtimeConfig.storageBucket,
-  messagingSenderId:
-    (import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID as string) ||
-    runtimeConfig.messagingSenderId,
-  appId:
-    (import.meta.env.VITE_FIREBASE_APP_ID as string) || runtimeConfig.appId,
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY as string,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN as string,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID as string,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET as string,
+  messagingSenderId: import.meta.env
+    .VITE_FIREBASE_MESSAGING_SENDER_ID as string,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID as string,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID as string,
 };
 
 // Initialize Firebase app (singleton by module scope)
 const app = initializeApp(firebaseConfig);
+
+// Initialize Analytics (only in production to avoid development noise)
+export const analytics =
+  typeof window !== "undefined" && import.meta.env.PROD
+    ? getAnalytics(app)
+    : null;
 
 export const auth = getAuth(app);
 auth.useDeviceLanguage();
