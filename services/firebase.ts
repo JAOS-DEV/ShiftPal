@@ -37,6 +37,11 @@ if (!firebaseConfig.projectId) {
     authDomain: firebaseConfig.authDomain,
     apiKey: firebaseConfig.apiKey ? "present" : "missing",
   });
+  console.log("Environment variables:", {
+    VITE_FIREBASE_PROJECT_ID: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    VITE_FIREBASE_AUTH_DOMAIN: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    VITE_FIREBASE_API_KEY: import.meta.env.VITE_FIREBASE_API_KEY ? "present" : "missing",
+  });
 }
 
 // Initialize Firebase app (singleton by module scope)
