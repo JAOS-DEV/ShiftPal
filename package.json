@@ -1,12 +1,13 @@
 {
-  "name": "driver-buddy",
+  "name": "shiftpal",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "npm run build && gh-pages -d dist"
   },
   "dependencies": {
     "@google/genai": "^1.11.0",
