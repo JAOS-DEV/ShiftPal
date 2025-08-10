@@ -21,18 +21,21 @@ const firebaseConfig = {
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN as string,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID as string,
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET as string,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID as string,
+  messagingSenderId: import.meta.env
+    .VITE_FIREBASE_MESSAGING_SENDER_ID as string,
   appId: import.meta.env.VITE_FIREBASE_APP_ID as string,
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID as string,
 };
 
 // Validate Firebase configuration
 if (!firebaseConfig.projectId) {
-  console.error('❌ Firebase projectId is missing. Check your environment variables.');
-  console.log('Current config:', {
+  console.error(
+    "❌ Firebase projectId is missing. Check your environment variables."
+  );
+  console.log("Current config:", {
     projectId: firebaseConfig.projectId,
     authDomain: firebaseConfig.authDomain,
-    apiKey: firebaseConfig.apiKey ? 'present' : 'missing'
+    apiKey: firebaseConfig.apiKey ? "present" : "missing",
   });
 }
 
