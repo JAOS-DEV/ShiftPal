@@ -19,6 +19,15 @@ dist-ssr
 .env.test.local
 .env.production.local
 
+# Local development files with sensitive data
+env.js
+
+# Documentation files
+todo.md
+DEPLOYMENT.md
+FIREBASE_SETUP.md
+PROJECT_STRUCTURE_IMPROVEMENTS.md
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
