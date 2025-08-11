@@ -288,21 +288,19 @@ const TimeTracker: React.FC<TimeTrackerProps> = ({
   };
 
   const handleSaveEdit = (updatedSubmission: DailySubmission) => {
-    // Check if this is a new duplicated entry (recent timestamp) or existing entry
-    const isNewEntry =
-      updatedSubmission.timestamp === editingSubmission?.timestamp &&
-      Math.abs(
-        new Date(updatedSubmission.timestamp).getTime() - new Date().getTime()
-      ) < 5000; // Within 5 seconds
+    // Check if this is a new duplicated entry by checking if the original submission exists
+    const originalSubmissionExists = dailySubmissions.some(
+      (sub) => sub.timestamp === editingSubmission?.timestamp
+    );
 
-    if (isNewEntry) {
+    if (!originalSubmissionExists && editingSubmission) {
       // This is a new duplicated entry, add it to daily submissions
       setDailySubmissions([updatedSubmission, ...dailySubmissions]);
     } else {
       // This is an existing entry being edited, update it
       setDailySubmissions(
         dailySubmissions.map((sub) =>
-          sub.timestamp === updatedSubmission.timestamp
+          sub.timestamp === editingSubmission?.timestamp
             ? updatedSubmission
             : sub
         )
@@ -476,6 +474,7 @@ const TimeTracker: React.FC<TimeTrackerProps> = ({
               onEndTimeChange={handleEndTimeChange}
               onSubmit={handleAddEntry}
               onShowTimeFormatModal={() => setShowTimeFormatModal(true)}
+              endTimeRef={endTimeRef}
             />
           </div>
 

@@ -13,6 +13,7 @@ interface TimeEntryFormProps {
   onEndTimeChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSubmit: (e: React.FormEvent) => void;
   onShowTimeFormatModal: () => void;
+  endTimeRef?: React.RefObject<HTMLInputElement>;
 }
 
 const TimeEntryForm: React.FC<TimeEntryFormProps> = ({
@@ -26,8 +27,10 @@ const TimeEntryForm: React.FC<TimeEntryFormProps> = ({
   onEndTimeChange,
   onSubmit,
   onShowTimeFormatModal,
+  endTimeRef,
 }) => {
-  const endTimeRef = useRef<HTMLInputElement>(null);
+  const localEndTimeRef = useRef<HTMLInputElement>(null);
+  const finalEndTimeRef = endTimeRef || localEndTimeRef;
 
   return (
     <div className="flex-shrink-0 p-3">
@@ -110,7 +113,7 @@ const TimeEntryForm: React.FC<TimeEntryFormProps> = ({
               END TIME
             </label>
             <input
-              ref={endTimeRef}
+              ref={finalEndTimeRef}
               id="end-time"
               name="end-time"
               type="text"
