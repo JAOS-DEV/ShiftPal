@@ -82,7 +82,7 @@ const UnionChatbot: React.FC<UnionChatbotProps> = ({ settings }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       sender: "bot",
-      text: "Hello! I'm your AI Driver Buddy. How can I help you today? You can ask me about your rights, pay, or union rules.\n\nThis feature is under development. \n\nPlease use this link instead: https://chatgpt.com/share/687faad1-2418-800c-b27d-82902187f69e",
+      text: "Hello! I'm your AI ShiftPal. How can I help you today? You can ask me about your rights, pay, or union rules.\n\nThis feature is under development. \n\nPlease use this link instead: https://chatgpt.com/share/687faad1-2418-800c-b27d-82902187f69e",
     },
   ]);
   const [inputValue, setInputValue] = useState("");

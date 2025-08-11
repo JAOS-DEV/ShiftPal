@@ -317,9 +317,7 @@ const App: React.FC = () => {
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <h3 className="text-base font-bold">
-                    Welcome to Driver Buddy
-                  </h3>
+                  <h3 className="text-base font-bold">Welcome to ShiftPal</h3>
                   <button
                     aria-label="Close onboarding"
                     onClick={closeOnboarding}

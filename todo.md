@@ -8,7 +8,7 @@ Context
 1. Prerequisites (no code changes)
 
 - Create a Stripe account (test mode).
-- In Stripe: create a Product "Driver Buddy Pro" and a Price (recurring monthly or annual). Note the priceId.
+- In Stripe: create a Product "ShiftPal Pro" and a Price (recurring monthly or annual). Note the priceId.
 - Ensure Firebase project billing tier supports the extension (Blaze required for live; can test in emulator/test mode first).
 
 2. Install Firebase Extension: Run payments with Stripe (firestore-stripe-payments)

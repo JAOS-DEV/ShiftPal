@@ -170,7 +170,7 @@ const Settings: React.FC<SettingsProps> = ({
         onClose={() => setUpgradeOpen(false)}
         featureName={upgradeFeature}
         darkMode={settings.darkMode}
-        supportEmail="jaosullivan0@gmail.com"
+        supportEmail="shiftpalapp@gmail.com"
         userUid={user?.uid}
         userRole={userProfile?.role}
       />
@@ -1443,7 +1443,7 @@ const Settings: React.FC<SettingsProps> = ({
                 settings.darkMode ? "text-gray-100" : "text-slate-700"
               }`}
             >
-              About Driver Buddy
+              About ShiftPal
             </h3>
             <div
               className={`space-y-1.5 text-xs ${
@@ -1451,8 +1451,6 @@ const Settings: React.FC<SettingsProps> = ({
               }`}
             >
               <p>Beta version 1.0.0</p>
-              <p>Designed for UK professional drivers</p>
-              <p>Data is stored locally on your device</p>
             </div>
           </div>
 
@@ -1474,9 +1472,9 @@ const Settings: React.FC<SettingsProps> = ({
             <div className="grid grid-cols-2 gap-2">
               <a
                 href={`mailto:${encodeURIComponent(
-                  "jaosullivan0@gmail.com"
+                  "shiftpalapp@gmail.com"
                 )}?subject=${encodeURIComponent(
-                  "Driver Buddy - Pro access request"
+                  "ShiftPal - Pro access request"
                 )}&body=${encodeURIComponent(
                   `Hi,\n\nI'd like pro access.\n\nDiagnostics:\nUID: ${
                     user?.uid || "n/a"
@@ -1492,9 +1490,9 @@ const Settings: React.FC<SettingsProps> = ({
               </a>
               <a
                 href={`mailto:${encodeURIComponent(
-                  "jaosullivan0@gmail.com"
+                  "shiftpalapp@gmail.com"
                 )}?subject=${encodeURIComponent(
-                  "Driver Buddy - Bug report / feedback"
+                  "ShiftPal - Bug report / feedback"
                 )}&body=${encodeURIComponent(
                   `Hi,\n\nI found a bug / have feedback:\n\n(Describe here)\n\nDiagnostics:\nUID: ${
                     user?.uid || "n/a"

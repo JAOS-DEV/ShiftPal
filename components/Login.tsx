@@ -15,7 +15,7 @@ const Login: React.FC = () => {
     <div className="h-full flex items-center justify-center">
       <div className="w-full max-w-sm p-6 rounded-2xl shadow-xl border bg-white">
         <div className="text-center mb-4">
-          <h1 className="text-xl font-bold text-slate-800">Driver Buddy</h1>
+          <h1 className="text-xl font-bold text-slate-800">ShiftPal</h1>
           <p className="text-sm text-slate-500 mt-1">Sign in to continue</p>
         </div>
         <button

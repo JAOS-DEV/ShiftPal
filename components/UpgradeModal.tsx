@@ -23,7 +23,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
 
   const handleEmailAdmin = () => {
     if (!supportEmail) return;
-    const subject = `Driver Buddy - Pro access request`;
+    const subject = `ShiftPal - Pro access request`;
     const diagnostics = `Diagnostics:\nUID: ${userUid || "n/a"}\nRole: ${
       userRole || "n/a"
     }`;
