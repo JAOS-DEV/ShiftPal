@@ -19,8 +19,6 @@ dist-ssr
 .env.test.local
 .env.production.local
 
-# Local development files with sensitive data
-env.js
 
 # Documentation files
 todo.md
