@@ -1111,7 +1111,7 @@ const PayCalculator: React.FC<PayCalculatorProps> = ({
                         settings.darkMode ? "text-gray-400" : "text-slate-500"
                       }`}
                     >
-                      MANUAL HOURS
+                      HOURS WORKED
                     </label>
                     <div className="grid grid-cols-2 gap-1">
                       <input
