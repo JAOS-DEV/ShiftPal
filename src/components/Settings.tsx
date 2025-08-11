@@ -5,6 +5,7 @@ import { signOutUser } from "../services/firebase";
 import { isPro } from "../services/firestoreStorage";
 import { UserProfile } from "../types";
 import UpgradeModal from "./UpgradeModal";
+import ToastNotification from "./ToastNotification";
 
 interface SettingsProps {
   settings: SettingsType;
@@ -23,12 +24,27 @@ const Settings: React.FC<SettingsProps> = ({
     settings.enableTaxCalculations
   );
   const [hasCloudData, setHasCloudData] = useState(false);
-  const [freeDownloadConsumed, setFreeDownloadConsumedState] = useState(false);
+  const [freeDownloadConsumedState, setFreeDownloadConsumedState] =
+    useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeFeature, setUpgradeFeature] = useState<string | undefined>(
     undefined
   );
   const [showCloudInfo, setShowCloudInfo] = useState(false);
+  const [toast, setToast] = useState<{ message: string; visible: boolean }>({
+    message: "",
+    visible: false,
+  });
+  const [showCloudSyncModal, setShowCloudSyncModal] = useState(false);
+  const [cloudSyncChoice, setCloudSyncChoice] = useState<
+    "download" | "upload" | null
+  >(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<{
+    title: string;
+    message: string;
+    action: () => void;
+  } | null>(null);
 
   const updateSettings = (updates: Partial<SettingsType>) => {
     setSettings({ ...settings, ...updates });
@@ -156,6 +172,89 @@ const Settings: React.FC<SettingsProps> = ({
     }).format(amount);
   };
 
+  // Toast effect
+  useEffect(() => {
+    if (toast.visible) {
+      const timer = setTimeout(() => {
+        setToast({ message: "", visible: false });
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast.visible]);
+
+  // Handle cloud sync choice
+  const handleCloudSyncChoice = async (choice: "download" | "upload") => {
+    if (!user) return;
+
+    try {
+      if (choice === "download") {
+        // Download cloud data to local
+        const { downloadCloudData } = await import(
+          "../services/firestoreStorage"
+        );
+        await downloadCloudData(user.uid);
+        const nowIso = new Date().toISOString();
+        updateSettings({
+          storageMode: "cloud",
+          lastSyncAt: nowIso,
+        });
+        setToast({
+          message: "Cloud sync enabled - using cloud data.",
+          visible: true,
+        });
+      } else {
+        // Upload local data to cloud
+        const local = {
+          settings: JSON.parse(localStorage.getItem("settings") || "null"),
+          timeEntries: JSON.parse(localStorage.getItem("timeEntries") || "[]"),
+          dailySubmissions: JSON.parse(
+            localStorage.getItem("dailySubmissions") || "[]"
+          ),
+          payHistory: JSON.parse(localStorage.getItem("payHistory") || "[]"),
+        };
+        const { writeCloudSnapshot } = await import(
+          "../services/firestoreStorage"
+        );
+        await writeCloudSnapshot(user.uid, local);
+        const nowIso = new Date().toISOString();
+        updateSettings({
+          storageMode: "cloud",
+          lastSyncAt: nowIso,
+        });
+        setToast({
+          message: "Cloud sync enabled - uploaded local data.",
+          visible: true,
+        });
+      }
+    } catch (e) {
+      setToast({
+        message: "Failed to enable cloud sync. Please try again.",
+        visible: true,
+      });
+    } finally {
+      setShowCloudSyncModal(false);
+      setCloudSyncChoice(null);
+    }
+  };
+
+  // Handle destructive action confirmation
+  const handleDestructiveAction = (
+    title: string,
+    message: string,
+    action: () => void
+  ) => {
+    setConfirmAction({ title, message, action });
+    setShowConfirmModal(true);
+  };
+
+  const executeConfirmedAction = () => {
+    if (confirmAction) {
+      confirmAction.action();
+    }
+    setShowConfirmModal(false);
+    setConfirmAction(null);
+  };
+
   return (
     <div
       className={`h-full flex flex-col ${
@@ -238,6 +337,137 @@ const Settings: React.FC<SettingsProps> = ({
         </div>
       )}
 
+      {/* Cloud Sync Choice Modal */}
+      {showCloudSyncModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div
+            className={`w-full max-w-sm rounded-xl shadow-2xl border ${
+              settings.darkMode
+                ? "bg-gray-800 border-gray-600 text-gray-100"
+                : "bg-white border-gray-200 text-slate-800"
+            }`}
+          >
+            <div
+              className={`px-4 py-3 border-b ${
+                settings.darkMode ? "border-gray-600" : "border-gray-200"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-bold">Cloud Data Found</h3>
+                <button
+                  onClick={() => {
+                    setShowCloudSyncModal(false);
+                    setCloudSyncChoice(null);
+                  }}
+                  className={
+                    settings.darkMode
+                      ? "text-gray-400 hover:text-gray-200"
+                      : "text-slate-400 hover:text-slate-600"
+                  }
+                  aria-label="Close"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+            <div className="px-4 py-3 space-y-3 text-sm">
+              <p>We found existing cloud data. What would you like to do?</p>
+              <div className="space-y-2">
+                <button
+                  onClick={() => handleCloudSyncChoice("download")}
+                  className={`w-full p-3 rounded-lg border text-left transition-colors ${
+                    settings.darkMode
+                      ? "bg-gray-700 border-gray-600 hover:bg-gray-600"
+                      : "bg-slate-100 border-slate-300 hover:bg-slate-200"
+                  }`}
+                >
+                  <div className="font-medium">Use Cloud Data</div>
+                  <div className="text-xs opacity-75">
+                    Download cloud data to this device (recommended)
+                  </div>
+                </button>
+                <button
+                  onClick={() => handleCloudSyncChoice("upload")}
+                  className={`w-full p-3 rounded-lg border text-left transition-colors ${
+                    settings.darkMode
+                      ? "bg-gray-700 border-gray-600 hover:bg-gray-600"
+                      : "bg-slate-100 border-slate-300 hover:bg-slate-200"
+                  }`}
+                >
+                  <div className="font-medium">Upload Local Data</div>
+                  <div className="text-xs opacity-75">
+                    Replace cloud data with this device's data
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {showConfirmModal && confirmAction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div
+            className={`w-full max-w-sm rounded-xl shadow-2xl border ${
+              settings.darkMode
+                ? "bg-gray-800 border-gray-600 text-gray-100"
+                : "bg-white border-gray-200 text-slate-800"
+            }`}
+          >
+            <div
+              className={`px-4 py-3 border-b ${
+                settings.darkMode ? "border-gray-600" : "border-gray-200"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-bold">{confirmAction.title}</h3>
+                <button
+                  onClick={() => setShowConfirmModal(false)}
+                  className={
+                    settings.darkMode
+                      ? "text-gray-400 hover:text-gray-200"
+                      : "text-slate-400 hover:text-slate-600"
+                  }
+                  aria-label="Close"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+            <div className="px-4 py-3 space-y-2 text-sm">
+              <p>{confirmAction.message}</p>
+            </div>
+            <div
+              className={`px-4 py-3 border-t ${
+                settings.darkMode ? "border-gray-600" : "border-gray-200"
+              } flex justify-end gap-2`}
+            >
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                className={
+                  settings.darkMode
+                    ? "bg-gray-700 hover:bg-gray-600 text-gray-100 px-3 py-1.5 rounded-md"
+                    : "bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-md"
+                }
+              >
+                Cancel
+              </button>
+              <button
+                onClick={executeConfirmedAction}
+                className={
+                  settings.darkMode
+                    ? "bg-red-700 hover:bg-red-600 text-white px-3 py-1.5 rounded-md"
+                    : "bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-md"
+                }
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex-1 overflow-y-auto pb-6">
         <div className="space-y-6">
           {/* Header */}
@@ -312,7 +542,10 @@ const Settings: React.FC<SettingsProps> = ({
                     try {
                       await signOutUser();
                     } catch (e) {
-                      alert("Failed to sign out. Please try again.");
+                      setToast({
+                        message: "Failed to sign out. Please try again.",
+                        visible: true,
+                      });
                     }
                   }}
                   className="text-sm bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600"
@@ -1067,7 +1300,10 @@ const Settings: React.FC<SettingsProps> = ({
                 <button
                   onClick={async () => {
                     if (!user) {
-                      alert("Sign in to use cloud sync.");
+                      setToast({
+                        message: "Sign in to use cloud sync.",
+                        visible: true,
+                      });
                       return;
                     }
                     if (!canUseCloudStorage) {
@@ -1093,79 +1329,17 @@ const Settings: React.FC<SettingsProps> = ({
                               cloudData.payHistory.length > 0));
 
                         if (hasCloudData) {
-                          // Ask user what to do with existing cloud data
-                          const choice = confirm(
-                            "Cloud data exists. Do you want to:\n\n" +
-                              "• OK: Use cloud data (downloads to this device)\n" +
-                              "• Cancel: Upload this device's data (replaces cloud data)\n\n" +
-                              "Choose OK to keep cloud data, Cancel to overwrite with this device's data."
-                          );
-
-                          if (choice) {
-                            // Download cloud data to local
-                            const { downloadCloudData } = await import(
-                              "../services/firestoreStorage"
-                            );
-                            await downloadCloudData(user.uid);
-                            const nowIso = new Date().toISOString();
-                            updateSettings({
-                              storageMode: "cloud",
-                              lastSyncAt: nowIso,
-                            });
-                          } else {
-                            // Upload local data to cloud
-                            const local = {
-                              settings: JSON.parse(
-                                localStorage.getItem("settings") || "null"
-                              ),
-                              timeEntries: JSON.parse(
-                                localStorage.getItem("timeEntries") || "[]"
-                              ),
-                              dailySubmissions: JSON.parse(
-                                localStorage.getItem("dailySubmissions") || "[]"
-                              ),
-                              payHistory: JSON.parse(
-                                localStorage.getItem("payHistory") || "[]"
-                              ),
-                            };
-                            const { writeCloudSnapshot } = await import(
-                              "../services/firestoreStorage"
-                            );
-                            await writeCloudSnapshot(user.uid, local);
-                            const nowIso = new Date().toISOString();
-                            updateSettings({
-                              storageMode: "cloud",
-                              lastSyncAt: nowIso,
-                            });
-                          }
+                          setCloudSyncChoice("download");
+                          setShowCloudSyncModal(true);
                         } else {
-                          // No cloud data exists, upload local data
-                          const local = {
-                            settings: JSON.parse(
-                              localStorage.getItem("settings") || "null"
-                            ),
-                            timeEntries: JSON.parse(
-                              localStorage.getItem("timeEntries") || "[]"
-                            ),
-                            dailySubmissions: JSON.parse(
-                              localStorage.getItem("dailySubmissions") || "[]"
-                            ),
-                            payHistory: JSON.parse(
-                              localStorage.getItem("payHistory") || "[]"
-                            ),
-                          };
-                          const { writeCloudSnapshot } = await import(
-                            "../services/firestoreStorage"
-                          );
-                          await writeCloudSnapshot(user.uid, local);
-                          const nowIso = new Date().toISOString();
-                          updateSettings({
-                            storageMode: "cloud",
-                            lastSyncAt: nowIso,
-                          });
+                          handleCloudSyncChoice("upload");
                         }
                       } catch (e) {
-                        alert("Failed to enable cloud sync. Please try again.");
+                        setToast({
+                          message:
+                            "Failed to enable cloud sync. Please try again.",
+                          visible: true,
+                        });
                         return;
                       }
                     } else {
@@ -1194,14 +1368,15 @@ const Settings: React.FC<SettingsProps> = ({
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => {
-                    if (!user) return alert("Sign in first");
+                    if (!user) {
+                      setToast({ message: "Sign in first.", visible: true });
+                      return;
+                    }
                     if (!canUseCloudStorage) {
                       openUpgrade("Cloud Sync");
                       return;
                     }
-                    const confirmMsg =
-                      "Upload this device's data to cloud? Existing cloud data will be replaced.";
-                    if (!confirm(confirmMsg)) return;
+                    // Upload local data to cloud (no confirmation needed for manual action)
                     const local = {
                       settings: JSON.parse(
                         localStorage.getItem("settings") || "null"
@@ -1218,7 +1393,7 @@ const Settings: React.FC<SettingsProps> = ({
                     };
                     import("../services/firestoreStorage").then(async (m) => {
                       await m.writeCloudSnapshot(user.uid, local);
-                      alert("Synced to cloud.");
+                      setToast({ message: "Synced to cloud.", visible: true });
                     });
                   }}
                   aria-label="Upload this device's data to cloud"
@@ -1241,17 +1416,18 @@ const Settings: React.FC<SettingsProps> = ({
                 </button>
                 <button
                   onClick={() => {
-                    if (!user) return alert("Sign in first");
+                    if (!user) {
+                      setToast({ message: "Sign in first.", visible: true });
+                      return;
+                    }
                     const allowDownload =
                       canUseCloudStorage ||
-                      (hasCloudData && !freeDownloadConsumed);
+                      (hasCloudData && !freeDownloadConsumedState);
                     if (!allowDownload) {
                       openUpgrade("Cloud Sync");
                       return;
                     }
-                    const confirmMsg =
-                      "Download cloud data to this device? Local data will be replaced.";
-                    if (!confirm(confirmMsg)) return;
+                    // Download cloud data to local (no confirmation needed for manual action)
                     import("../services/firestoreStorage").then(async (m) => {
                       const snap = await m.readCloudSnapshot(user.uid);
                       if (snap.settings)
@@ -1275,7 +1451,7 @@ const Settings: React.FC<SettingsProps> = ({
                       if (
                         !canUseCloudStorage &&
                         hasCloudData &&
-                        !freeDownloadConsumed
+                        !freeDownloadConsumedState
                       ) {
                         try {
                           await m.setFreeDownloadConsumed(user.uid);
@@ -1288,20 +1464,23 @@ const Settings: React.FC<SettingsProps> = ({
                         } catch {}
                       }
 
-                      alert("Synced to local. Reloading…");
+                      setToast({
+                        message: "Synced to local. Reloading…",
+                        visible: true,
+                      });
                       setTimeout(() => window.location.reload(), 500);
                     });
                   }}
                   aria-label="Download cloud data to this device"
                   title={
                     canUseCloudStorage ||
-                    (hasCloudData && !freeDownloadConsumed)
+                    (hasCloudData && !freeDownloadConsumedState)
                       ? "Download cloud data to this device"
                       : "Pro required"
                   }
                   className={`w-full py-1 px-2 rounded border transition-colors text-xs ${
                     canUseCloudStorage ||
-                    (hasCloudData && !freeDownloadConsumed)
+                    (hasCloudData && !freeDownloadConsumedState)
                       ? settings.darkMode
                         ? "bg-gray-700 text-gray-100 border-gray-600 hover:bg-gray-600"
                         : "bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200"
@@ -1323,17 +1502,28 @@ const Settings: React.FC<SettingsProps> = ({
               </p>
               <button
                 onClick={() => {
-                  if (!user) return alert("Sign in first");
+                  if (!user) {
+                    setToast({ message: "Sign in first.", visible: true });
+                    return;
+                  }
                   if (!canUseCloudStorage) {
                     openUpgrade("Cloud Sync");
                     return;
                   }
-                  if (!confirm("This will delete your cloud data. Continue?"))
-                    return;
-                  import("../services/firestoreStorage").then(async (m) => {
-                    await m.clearCloudData(user.uid);
-                    alert("Cloud data cleared.");
-                  });
+                  handleDestructiveAction(
+                    "Delete cloud data",
+                    "This will permanently delete all data stored in the cloud. Your local data on this device will remain unchanged. Continue?",
+                    async () => {
+                      const { clearCloudData } = await import(
+                        "../services/firestoreStorage"
+                      );
+                      await clearCloudData(user.uid);
+                      setToast({
+                        message: "Cloud data cleared.",
+                        visible: true,
+                      });
+                    }
+                  );
                 }}
                 className={`w-full font-bold py-1.5 px-3 rounded-md transition-colors text-sm ${
                   canUseCloudStorage
@@ -1370,8 +1560,12 @@ const Settings: React.FC<SettingsProps> = ({
                 }
                 className={`w-full font-bold py-1.5 px-3 rounded-md transition-colors text-sm ${
                   canExportCSV
-                    ? "bg-blue-500 text-white hover:bg-blue-600"
-                    : "bg-blue-300 text-white cursor-not-allowed"
+                    ? settings.darkMode
+                      ? "bg-gray-700 text-gray-100 border-gray-600 hover:bg-gray-600"
+                      : "bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200"
+                    : settings.darkMode
+                    ? "bg-gray-800 text-gray-500 border-gray-700 cursor-not-allowed"
+                    : "bg-slate-100/80 text-slate-500 border-slate-300/60 cursor-not-allowed"
                 }`}
               >
                 Export Pay History (CSV) {canExportCSV ? "" : "(Pro required)"}
@@ -1390,14 +1584,17 @@ const Settings: React.FC<SettingsProps> = ({
               </p>
               <button
                 onClick={() => {
-                  if (
-                    !confirm(
-                      "This will permanently delete all saved pay on this device. Continue?"
-                    )
-                  )
-                    return;
-                  localStorage.removeItem("payHistory");
-                  alert("All pay history has been cleared.");
+                  handleDestructiveAction(
+                    "Clear local pay history",
+                    "This will permanently delete all saved pay on this device. Continue?",
+                    () => {
+                      localStorage.removeItem("payHistory");
+                      setToast({
+                        message: "All pay history has been cleared.",
+                        visible: true,
+                      });
+                    }
+                  );
                 }}
                 className="w-full bg-red-500 text-white font-bold py-1.5 px-3 rounded-md hover:bg-red-600 transition-colors text-sm"
               >
@@ -1413,15 +1610,18 @@ const Settings: React.FC<SettingsProps> = ({
               </p>
               <button
                 onClick={() => {
-                  if (
-                    !confirm(
-                      "This will permanently delete ALL local data (entries, pay history, settings). Continue?"
-                    )
-                  )
-                    return;
-                  localStorage.clear();
-                  alert("All local data has been cleared. Reloading…");
-                  setTimeout(() => window.location.reload(), 500);
+                  handleDestructiveAction(
+                    "Clear all local data",
+                    "This will permanently delete ALL local data (entries, pay history, settings). Continue?",
+                    () => {
+                      localStorage.clear();
+                      setToast({
+                        message: "All local data has been cleared. Reloading…",
+                        visible: true,
+                      });
+                      setTimeout(() => window.location.reload(), 500);
+                    }
+                  );
                 }}
                 className="w-full bg-red-700 text-white font-bold py-1.5 px-3 rounded-md hover:bg-red-800 transition-colors text-sm"
               >
@@ -1517,6 +1717,7 @@ const Settings: React.FC<SettingsProps> = ({
           </div>
         </div>
       </div>
+      <ToastNotification message={toast.message} visible={toast.visible} />
     </div>
   );
 };
