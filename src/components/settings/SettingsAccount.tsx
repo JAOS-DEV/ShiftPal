@@ -8,6 +8,7 @@ import {
   sendEmailVerificationToUser,
 } from "../../services/firebase";
 import { UserProfile } from "../../types";
+import { signOutUserAndSaveData } from "../../utils/userDataUtils";
 
 interface SettingsAccountProps {
   settings: SettingsType;
@@ -230,7 +231,11 @@ const SettingsAccount: React.FC<SettingsAccountProps> = ({
             <button
               onClick={async () => {
                 try {
+                  // Sign out from Firebase first
                   await signOutUser();
+
+                  // Sign out user and save their data
+                  signOutUserAndSaveData();
                 } catch (e) {
                   onSignOutError("Failed to sign out. Please try again.");
                 }

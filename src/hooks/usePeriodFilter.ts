@@ -25,7 +25,7 @@ export const usePeriodFilter = <T extends { date: string }>(
 
     if (selectedPeriod === "week") {
       // Calculate week start based on the selected date and settings
-      const weekStartDay = weekStartDayMap[settings.weekStartDay];
+      const weekStartDay = weekStartDayMap[settings.weekStartDay] ?? 1; // Default to monday (1)
       const currentDay = selectedDateObj.getDay();
 
       // Calculate days to subtract to get to the start of the current week

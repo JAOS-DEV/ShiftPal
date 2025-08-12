@@ -45,6 +45,17 @@ function useLocalStorage<T>(key: string, initialValue: T) {
     setStoredValue(readValue());
   }, []);
 
+  // Listen for user data loaded events to update state when user switches
+  useEffect(() => {
+    const handleUserDataLoaded = () => {
+      setStoredValue(readValue());
+    };
+
+    window.addEventListener("userDataLoaded", handleUserDataLoaded);
+    return () =>
+      window.removeEventListener("userDataLoaded", handleUserDataLoaded);
+  }, []);
+
   return [storedValue, setValue] as const;
 }
 

@@ -26,6 +26,15 @@ import {
   updateLastLogin,
 } from "./services/firestoreStorage";
 import type { User } from "firebase/auth";
+import {
+  setCurrentUserId,
+  getCurrentUserId,
+  isDifferentUser,
+  ensureProFeaturesDisabled,
+  switchToUser,
+  saveUserData,
+  loadUserData,
+} from "./utils/userDataUtils";
 
 const App: React.FC = () => {
   const [activeView, setActiveView] = useLocalStorage<View>(
@@ -58,13 +67,13 @@ const App: React.FC = () => {
     storageMode: "local",
   });
 
-  // Onboarding (first run)
+  // Onboarding (first run) - DISABLED FOR NOW
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState<1 | 2>(1);
-  useEffect(() => {
-    const done = localStorage.getItem("onboardingComplete");
-    if (!done) setShowOnboarding(true);
-  }, []);
+  // useEffect(() => {
+  //   const done = localStorage.getItem("onboardingComplete");
+  //   if (!done) setShowOnboarding(true);
+  // }, []);
   const closeOnboarding = () => {
     localStorage.setItem("onboardingComplete", "true");
     setShowOnboarding(false);
@@ -88,12 +97,36 @@ const App: React.FC = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const applyingCloudRef = useRef(false);
 
+  // Listen for storage changes (when user signs out in another tab)
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "currentUserId" && e.newValue === null && user) {
+        // User was signed out in another tab - preserve local data but clear user state
+        setUser(null);
+        setUserProfile(null);
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, [user]);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       setAuthChecked(true);
 
       if (firebaseUser) {
+        // Check if this is a different user than the one stored in localStorage
+        if (isDifferentUser(firebaseUser.uid)) {
+          // Different user or fresh sign-in - switch to their data
+          switchToUser(firebaseUser.uid);
+        } else {
+          // Same user signing back in - load their saved data
+          loadUserData(firebaseUser.uid);
+          setCurrentUserId(firebaseUser.uid);
+        }
+
         // Load or create user profile
         try {
           let profile = await getUserProfile(firebaseUser.uid);
@@ -112,10 +145,34 @@ const App: React.FC = () => {
           }
 
           setUserProfile(profile);
+
+          // Ensure pro features are properly gated based on user profile
+          if (profile && !isPro(profile)) {
+            // User is not pro - ensure pro features are disabled
+            const currentSettings = JSON.parse(
+              localStorage.getItem("settings") || "{}"
+            );
+            const updatedSettings = ensureProFeaturesDisabled(currentSettings);
+
+            // If settings changed, update localStorage and state
+            if (
+              JSON.stringify(currentSettings) !==
+              JSON.stringify(updatedSettings)
+            ) {
+              localStorage.setItem("settings", JSON.stringify(updatedSettings));
+              setSettings(updatedSettings);
+            }
+          }
         } catch (error) {
           console.error("Error loading user profile:", error);
         }
       } else {
+        // User logged out - save their data but keep the currentUserId for comparison
+        const currentUserId = getCurrentUserId();
+        if (currentUserId) {
+          saveUserData(currentUserId);
+        }
+        // User data is saved above, currentUserId will be handled when a new user signs in
         setUserProfile(null);
       }
     });
@@ -135,7 +192,32 @@ const App: React.FC = () => {
           profileRef,
           (snap) => {
             if (snap.exists()) {
-              setUserProfile(snap.data() as UserProfile);
+              const newProfile = snap.data() as UserProfile;
+              setUserProfile(newProfile);
+
+              // Check if pro status changed and update settings accordingly
+              const currentSettings = JSON.parse(
+                localStorage.getItem("settings") || "{}"
+              );
+              const userIsPro = isPro(newProfile);
+
+              if (!userIsPro) {
+                // User lost pro access - disable pro features
+                const updatedSettings =
+                  ensureProFeaturesDisabled(currentSettings);
+
+                // If settings changed, update localStorage and state
+                if (
+                  JSON.stringify(currentSettings) !==
+                  JSON.stringify(updatedSettings)
+                ) {
+                  localStorage.setItem(
+                    "settings",
+                    JSON.stringify(updatedSettings)
+                  );
+                  setSettings(updatedSettings);
+                }
+              }
             }
           },
           (err) => {

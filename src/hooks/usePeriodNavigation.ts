@@ -17,7 +17,9 @@ export const usePeriodNavigation = (settings: Settings) => {
       friday: 5,
       saturday: 6,
     };
-    const weekStartDay = weekStartDayMap[settings.weekStartDay];
+
+    // Ensure settings.weekStartDay is valid, default to monday if not
+    const weekStartDay = weekStartDayMap[settings.weekStartDay] ?? 1; // Default to monday (1)
     const currentDay = today.getDay();
 
     let daysToSubtract = currentDay - weekStartDay;
@@ -41,7 +43,9 @@ export const usePeriodNavigation = (settings: Settings) => {
       friday: 5,
       saturday: 6,
     };
-    const weekStartDay = weekStartDayMap[settings.weekStartDay];
+
+    // Ensure settings.weekStartDay is valid, default to monday if not
+    const weekStartDay = weekStartDayMap[settings.weekStartDay] ?? 1; // Default to monday (1)
     const currentDay = today.getDay();
 
     let daysToSubtract = currentDay - weekStartDay;
@@ -82,7 +86,9 @@ export const usePeriodNavigation = (settings: Settings) => {
       friday: 5,
       saturday: 6,
     };
-    const weekStartDay = weekStartDayMap[settings.weekStartDay];
+
+    // Ensure settings.weekStartDay is valid, default to monday if not
+    const weekStartDay = weekStartDayMap[settings.weekStartDay] ?? 1; // Default to monday (1)
     const currentDay = selectedDateObj.getDay();
 
     let daysToSubtract = currentDay - weekStartDay;
@@ -140,7 +146,9 @@ export const usePeriodNavigation = (settings: Settings) => {
           friday: 5,
           saturday: 6,
         };
-        const weekStartDay = weekStartDayMap[settings.weekStartDay];
+
+        // Ensure settings.weekStartDay is valid, default to monday if not
+        const weekStartDay = weekStartDayMap[settings.weekStartDay] ?? 1; // Default to monday (1)
         const currentDay = weekStart.getDay();
 
         let daysToSubtract = currentDay - weekStartDay;
