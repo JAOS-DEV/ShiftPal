@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Settings as SettingsType } from "../types";
 import type { User } from "firebase/auth";
 import { UserProfile } from "../types";
-import { UpgradeModal } from "../components/modals";
+import { ProVerificationUpgradeModal } from "../components/modals";
 import ToastNotification from "../components/ui/ToastNotification";
 import {
   SettingsAccount,
@@ -92,15 +92,15 @@ const Settings: React.FC<SettingsProps> = ({
           : "text-[#003D5B] bg-[#FAF7F0]"
       }`}
     >
-      {/* Upgrade Modal */}
-      <UpgradeModal
+      {/* Hybrid Verification & Upgrade Modal */}
+      <ProVerificationUpgradeModal
         open={upgradeOpen}
         onClose={() => setUpgradeOpen(false)}
         featureName={upgradeFeature}
         darkMode={settings.darkMode}
+        userProfile={userProfile}
         supportEmail="shiftpalapp@gmail.com"
         userUid={user?.uid}
-        userRole={userProfile?.role}
       />
 
       {/* Confirmation Modal */}
@@ -236,11 +236,13 @@ const Settings: React.FC<SettingsProps> = ({
             userProfile={userProfile}
             openUpgrade={openUpgrade}
             onToast={onToast}
+            onDestructiveAction={onDestructiveAction}
           />
 
           {/* Data Management */}
           <SettingsDataManagement
             settings={settings}
+            updateSettings={updateSettings}
             user={user}
             userProfile={userProfile}
             openUpgrade={openUpgrade}

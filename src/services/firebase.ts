@@ -13,7 +13,14 @@ import {
   getRedirectResult,
   signOut,
   onAuthStateChanged,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+  sendEmailVerification,
+  updatePassword,
+  updateEmail,
   type User,
+  type UserCredential,
 } from "firebase/auth";
 
 const firebaseConfig = {
@@ -69,6 +76,50 @@ export async function signInWithGoogle(): Promise<User> {
     }
     return redirectResult.user;
   }
+}
+
+// Email/Password Authentication Functions
+export async function signUpWithEmail(
+  email: string,
+  password: string
+): Promise<UserCredential> {
+  return createUserWithEmailAndPassword(auth, email, password);
+}
+
+export async function signInWithEmail(
+  email: string,
+  password: string
+): Promise<UserCredential> {
+  return signInWithEmailAndPassword(auth, email, password);
+}
+
+export async function sendPasswordReset(email: string): Promise<void> {
+  return sendPasswordResetEmail(auth, email);
+}
+
+export async function sendEmailVerificationToUser(user: User): Promise<void> {
+  return sendEmailVerification(user);
+}
+
+export async function updateUserPassword(newPassword: string): Promise<void> {
+  const user = auth.currentUser;
+  if (!user) {
+    throw new Error("No user is currently signed in");
+  }
+  return updatePassword(user, newPassword);
+}
+
+export async function updateUserEmail(newEmail: string): Promise<void> {
+  const user = auth.currentUser;
+  if (!user) {
+    throw new Error("No user is currently signed in");
+  }
+  return updateEmail(user, newEmail);
+}
+
+// Helper function to check if user can access Pro features
+export function canAccessProFeatures(user: User | null): boolean {
+  return user?.emailVerified === true;
 }
 
 export async function signOutUser(): Promise<void> {

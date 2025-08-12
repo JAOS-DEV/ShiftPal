@@ -34,6 +34,19 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
     window.location.href = url;
   };
 
+  const handleRequestBetaAccess = () => {
+    if (!supportEmail) return;
+    const subject = `ShiftPal - Beta Tester Request`;
+    const diagnostics = `Diagnostics:\nUID: ${userUid || "n/a"}\nRole: ${
+      userRole || "n/a"
+    }`;
+    const body = `Hi ShiftPal team,\n\nI'd like to request beta tester access for Pro features.\n\n${diagnostics}\n\nI'm interested in testing:\n- ${featureName}\n- Other Pro features\n\nThanks!`;
+    const url = `mailto:${encodeURIComponent(
+      supportEmail
+    )}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = url;
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <div
@@ -76,37 +89,48 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
           </ul>
           <div className="text-xs mt-1">
             <span className={darkMode ? "text-gray-400" : "text-slate-500"}>
-              Prefer not to upgrade right now? Email the admin to request
-              access.
+              Want to try Pro features? Request beta tester access or email the admin to upgrade.
             </span>
           </div>
         </div>
         <div
-          className={`px-4 py-3 border-t flex justify-end gap-2 ${
+          className={`px-4 py-3 border-t flex flex-col gap-2 ${
             darkMode ? "border-gray-600" : "border-gray-200"
           }`}
         >
           {supportEmail && (
-            <button
-              onClick={handleEmailAdmin}
-              className={
-                darkMode
-                  ? "bg-gray-700 hover:bg-gray-600 text-gray-100 px-3 py-1.5 rounded-md"
-                  : "bg-slate-200 hover:bg-slate-300 text-slate-800 px-3 py-1.5 rounded-md"
-              }
-            >
-              Email admin
-            </button>
+            <>
+              <button
+                onClick={handleRequestBetaAccess}
+                className={
+                  darkMode
+                    ? "bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-sm font-medium"
+                    : "bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-sm font-medium"
+                }
+              >
+                🧪 Request Beta Access
+              </button>
+              <button
+                onClick={handleEmailAdmin}
+                className={
+                  darkMode
+                    ? "bg-gray-700 hover:bg-gray-600 text-gray-100 px-3 py-1.5 rounded-md text-sm"
+                    : "bg-slate-200 hover:bg-slate-300 text-slate-800 px-3 py-1.5 rounded-md text-sm"
+                }
+              >
+                Email admin to upgrade
+              </button>
+            </>
           )}
           <button
             onClick={onClose}
             className={
               darkMode
-                ? "bg-gray-700 hover:bg-gray-600 text-gray-100 px-3 py-1.5 rounded-md"
-                : "bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-md"
+                ? "bg-gray-700 hover:bg-gray-600 text-gray-100 px-3 py-1.5 rounded-md text-sm"
+                : "bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-md text-sm"
             }
           >
-            Got it
+            Maybe later
           </button>
         </div>
       </div>

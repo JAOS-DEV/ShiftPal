@@ -27,6 +27,7 @@ todo.md
 DEPLOYMENT.md
 FIREBASE_SETUP.md
 PROJECT_STRUCTURE_IMPROVEMENTS.md
+EMAIL_PASSWORD_AUTH.md
 
 # Editor directories and files
 .vscode/*

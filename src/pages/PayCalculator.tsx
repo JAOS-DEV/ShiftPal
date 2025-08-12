@@ -8,7 +8,7 @@ import { formatCurrency } from "../utils/formatUtils";
 import { DailyPay, Settings, DailySubmission, UserProfile } from "../types";
 import PayHistory from "./PayHistory";
 import { isPro } from "../services/firestoreStorage";
-import { UpgradeModal } from "../components/modals";
+import { ProVerificationUpgradeModal } from "../components/modals";
 import {
   PayCalculatorTabs,
   CalculationMethodToggle,
@@ -329,11 +329,14 @@ const PayCalculator: React.FC<PayCalculatorProps> = ({
       }`}
     >
       {/* Upgrade Modal */}
-      <UpgradeModal
+      <ProVerificationUpgradeModal
         open={upgradeOpen}
         onClose={() => setUpgradeOpen(false)}
         featureName={upgradeFeature}
         darkMode={settings.darkMode}
+        userProfile={userProfile}
+        supportEmail="shiftpalapp@gmail.com"
+        userUid={undefined}
       />
 
       {/* Success Toast */}
