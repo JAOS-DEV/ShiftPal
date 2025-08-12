@@ -105,7 +105,7 @@ const Settings: React.FC<SettingsProps> = ({
 
       {/* Confirmation Modal */}
       {showConfirmModal && confirmAction && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/50">
           <div
             className={`w-full max-w-sm rounded-xl shadow-2xl border ${
               settings.darkMode
@@ -114,12 +114,14 @@ const Settings: React.FC<SettingsProps> = ({
             }`}
           >
             <div
-              className={`px-4 py-3 border-b ${
+              className={`px-3 sm:px-4 py-3 border-b ${
                 settings.darkMode ? "border-gray-600" : "border-gray-200"
               }`}
             >
               <div className="flex items-center justify-between">
-                <h3 className="text-base font-bold">{confirmAction.title}</h3>
+                <h3 className="text-sm sm:text-base font-bold">
+                  {confirmAction.title}
+                </h3>
                 <button
                   onClick={() => setShowConfirmModal(false)}
                   className={
@@ -133,11 +135,11 @@ const Settings: React.FC<SettingsProps> = ({
                 </button>
               </div>
             </div>
-            <div className="px-4 py-3 space-y-2 text-sm">
+            <div className="px-3 sm:px-4 py-3 space-y-2 text-xs sm:text-sm">
               <p>{confirmAction.message}</p>
             </div>
             <div
-              className={`px-4 py-3 border-t ${
+              className={`px-3 sm:px-4 py-3 border-t ${
                 settings.darkMode ? "border-gray-600" : "border-gray-200"
               } flex justify-end gap-2`}
             >
@@ -145,8 +147,8 @@ const Settings: React.FC<SettingsProps> = ({
                 onClick={() => setShowConfirmModal(false)}
                 className={
                   settings.darkMode
-                    ? "bg-gray-700 hover:bg-gray-600 text-gray-100 px-3 py-1.5 rounded-md"
-                    : "bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-md"
+                    ? "bg-gray-700 hover:bg-gray-600 text-gray-100 px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm"
+                    : "bg-slate-800 hover:bg-slate-700 text-white px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm"
                 }
               >
                 Cancel
@@ -155,8 +157,8 @@ const Settings: React.FC<SettingsProps> = ({
                 onClick={executeConfirmedAction}
                 className={
                   settings.darkMode
-                    ? "bg-red-700 hover:bg-red-600 text-white px-3 py-1.5 rounded-md"
-                    : "bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-md"
+                    ? "bg-red-700 hover:bg-red-600 text-white px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm"
+                    : "bg-red-600 hover:bg-red-700 text-white px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm"
                 }
               >
                 Confirm

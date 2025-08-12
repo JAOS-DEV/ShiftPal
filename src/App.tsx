@@ -303,7 +303,7 @@ const App: React.FC = () => {
       >
         {/* Onboarding Modal */}
         {showOnboarding && (
-          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-3">
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-2 sm:p-3">
             <div
               className={`w-full max-w-sm rounded-xl shadow-2xl border ${
                 settings.darkMode
@@ -312,12 +312,14 @@ const App: React.FC = () => {
               }`}
             >
               <div
-                className={`px-4 py-3 border-b ${
+                className={`px-3 sm:px-4 py-3 border-b ${
                   settings.darkMode ? "border-gray-600" : "border-gray-200"
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <h3 className="text-base font-bold">Welcome to ShiftPal</h3>
+                  <h3 className="text-sm sm:text-base font-bold">
+                    Welcome to ShiftPal
+                  </h3>
                   <button
                     aria-label="Close onboarding"
                     onClick={closeOnboarding}
@@ -331,7 +333,7 @@ const App: React.FC = () => {
                   </button>
                 </div>
               </div>
-              <div className="px-4 py-3 space-y-2 text-sm">
+              <div className="px-3 sm:px-4 py-3 space-y-2 text-xs sm:text-sm">
                 {onboardingStep === 1 ? (
                   <>
                     <p>
@@ -353,7 +355,7 @@ const App: React.FC = () => {
                 )}
               </div>
               <div
-                className={`px-4 py-3 border-t flex justify-end gap-2 ${
+                className={`px-3 sm:px-4 py-3 border-t flex justify-end gap-2 ${
                   settings.darkMode ? "border-gray-600" : "border-gray-200"
                 }`}
               >
@@ -363,8 +365,8 @@ const App: React.FC = () => {
                     onClick={() => setOnboardingStep(2)}
                     className={
                       settings.darkMode
-                        ? "bg-gray-700 hover:bg-gray-600 text-gray-100 px-3 py-1.5 rounded-md"
-                        : "bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-md"
+                        ? "bg-gray-700 hover:bg-gray-600 text-gray-100 px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm"
+                        : "bg-slate-800 hover:bg-slate-700 text-white px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm"
                     }
                   >
                     Next
@@ -375,8 +377,8 @@ const App: React.FC = () => {
                     onClick={closeOnboarding}
                     className={
                       settings.darkMode
-                        ? "bg-gray-700 hover:bg-gray-600 text-gray-100 px-3 py-1.5 rounded-md"
-                        : "bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-md"
+                        ? "bg-gray-700 hover:bg-gray-600 text-gray-100 px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm"
+                        : "bg-slate-800 hover:bg-slate-700 text-white px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm"
                     }
                   >
                     Got it
