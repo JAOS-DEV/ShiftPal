@@ -19,6 +19,8 @@ dist-ssr
 .env.test.local
 .env.production.local
 
+# Backups
+Settings.tsx.backup
 
 # Documentation files
 todo.md

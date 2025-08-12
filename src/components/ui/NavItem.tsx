@@ -42,3 +42,5 @@ export const NavItem: React.FC<NavItemProps> = ({
     )}
   </button>
 );
+
+export default NavItem;

@@ -1,8 +1,8 @@
 import React from "react";
-import { TimeEntry, DailySubmission, Settings } from "../types";
-import TimeTracker from "./TimeTracker";
-import { useTimeCalculations } from "../hooks/useTimeCalculations";
-import useLocalStorage from "../hooks/useLocalStorage";
+import { TimeEntry, DailySubmission, Settings } from "../../types";
+import TimeTracker from "../../pages/TimeTracker";
+import { useTimeCalculations } from "../../hooks/useTimeCalculations";
+import useLocalStorage from "../../hooks/useLocalStorage";
 
 interface WorkLogProps {
   settings: Settings;

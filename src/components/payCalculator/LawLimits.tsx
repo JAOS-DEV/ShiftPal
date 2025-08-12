@@ -1,7 +1,7 @@
 import React from "react";
-import useLocalStorage from "../hooks/useLocalStorage";
-import { formatDurationWithMinutes } from "../hooks/useTimeCalculations";
-import { DailySubmission, Settings } from "../types";
+import useLocalStorage from "../../hooks/useLocalStorage";
+import { formatDurationWithMinutes } from "../../utils/timeUtils";
+import { DailySubmission, Settings } from "../../types";
 
 interface LawLimitsProps {
   totalMinutes: number;

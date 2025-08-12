@@ -7,17 +7,17 @@ import {
   DailySubmission,
   UserProfile,
 } from "./types";
-import WorkLog from "./components/WorkLog";
-import UnionChatbot from "./components/UnionChatbot";
-import SettingsComponent from "./components/Settings";
-import PayCalculator from "./components/PayCalculator";
-import LawLimits from "./components/LawLimits";
-import BottomNav from "./components/BottomNav";
-import ErrorBoundary from "./components/ErrorBoundary";
-import AdminPanel from "./components/AdminPanel";
+import { WorkLog } from "./components/timeTracker";
+import UnionChatbot from "./pages/UnionChatbot";
+import SettingsComponent from "./pages/Settings";
+import PayCalculator from "./pages/PayCalculator";
+import { LawLimits } from "./components/payCalculator";
+import BottomNav from "./components/ui/BottomNav";
+import ErrorBoundary from "./components/ui/ErrorBoundary";
+import AdminPanel from "./pages/AdminPanel";
 import useLocalStorage from "./hooks/useLocalStorage";
 import { useTimeCalculations } from "./hooks/useTimeCalculations";
-import Login from "./components/Login";
+import Login from "./pages/Login";
 import { auth, onAuthStateChanged } from "./services/firebase";
 import {
   getUserProfile,

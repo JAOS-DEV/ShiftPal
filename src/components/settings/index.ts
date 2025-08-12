@@ -1,0 +1,10 @@
+export { default as SettingsAccount } from "./SettingsAccount";
+export { default as SettingsAppearance } from "./SettingsAppearance";
+export { default as SettingsWeekConfig } from "./SettingsWeekConfig";
+export { default as SettingsPayRates } from "./SettingsPayRates";
+export { default as SettingsTaxNI } from "./SettingsTaxNI";
+export { default as SettingsEarningGoals } from "./SettingsEarningGoals";
+export { default as SettingsCloudSync } from "./SettingsCloudSync";
+export { default as SettingsDataManagement } from "./SettingsDataManagement";
+export { default as SettingsAppInfo } from "./SettingsAppInfo";
+export { default as ProBadge } from "./ProBadge";

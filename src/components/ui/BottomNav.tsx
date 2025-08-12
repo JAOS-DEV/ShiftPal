@@ -1,5 +1,5 @@
 import React from "react";
-import { View, UserProfile } from "../types";
+import { View, UserProfile } from "../../types";
 import { NavItem } from "./NavItem";
 
 interface BottomNavProps {

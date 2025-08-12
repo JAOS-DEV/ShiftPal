@@ -1,5 +1,6 @@
 import React from "react";
-import { TimeEntry, Settings } from "../types";
+import { TimeEntry, Settings } from "../../types";
+import { formatTimeForDisplay } from "../../utils/timeUtils";
 
 interface EntriesListProps {
   entries: TimeEntry[];
@@ -25,14 +26,6 @@ const EntriesList: React.FC<EntriesListProps> = ({
   calculateDuration,
   formatDurationWithMinutes,
 }) => {
-  // Format the times for display (HHMM to HH:MM)
-  const formatTimeForDisplay = (time: string) => {
-    if (time.length === 4) {
-      return `${time.substring(0, 2)}:${time.substring(2, 4)}`;
-    }
-    return time;
-  };
-
   return (
     <div className="flex-1 overflow-hidden px-3">
       <div className="overflow-y-auto" style={{ height: `${entriesHeight}px` }}>

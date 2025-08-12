@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { DailySubmission, Settings } from "../types";
-import PeriodSelector from "./PeriodSelector";
+import { DailySubmission, Settings } from "../../types";
+import { PeriodSelector } from "../layout";
 
 interface HistoryViewProps {
   filteredSubmissions: DailySubmission[];

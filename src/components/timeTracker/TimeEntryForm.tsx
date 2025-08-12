@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
 import { Settings } from "../types";
-import { PlusIcon } from "./icons";
+import { PlusIcon } from "../ui/icons";
 
 interface TimeEntryFormProps {
   startTime: string;

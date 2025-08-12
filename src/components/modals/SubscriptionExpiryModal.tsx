@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { UserProfile } from "../types";
-import { updateSubscriptionExpiry } from "../services/firestoreStorage";
+import { UserProfile } from "../../types";
+import { updateSubscriptionExpiry } from "../../services/firestoreStorage";
 
 interface SubscriptionExpiryModalProps {
   user: UserProfile;
