@@ -10,10 +10,14 @@ type AuthMode = "signin" | "signup" | "reset";
 
 interface AuthFormProps {
   onSuccess?: () => void;
+  initialMode?: "signin" | "signup";
 }
 
-const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
-  const [mode, setMode] = useState<AuthMode>("signin");
+const AuthForm: React.FC<AuthFormProps> = ({
+  onSuccess,
+  initialMode = "signin",
+}) => {
+  const [mode, setMode] = useState<AuthMode>(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
