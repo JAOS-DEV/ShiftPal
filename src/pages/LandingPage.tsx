@@ -323,8 +323,8 @@ const LandingPage: React.FC = () => {
             Ready to take control of your shifts?
           </h2>
           <p className="text-slate-600 mb-4 sm:mb-6 lg:mb-8 xl:mb-10 text-sm sm:text-base lg:text-lg">
-            Join thousands of shift workers who trust ShiftPal to track their
-            time and calculate their pay.
+            The ultimate app for shift workers to track their time and calculate
+            their pay.
           </p>
           <button
             onClick={() => handleGetStarted("signup")}
