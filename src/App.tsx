@@ -17,7 +17,7 @@ import ErrorBoundary from "./components/ui/ErrorBoundary";
 import AdminPanel from "./pages/AdminPanel";
 import useLocalStorage from "./hooks/useLocalStorage";
 import { useTimeCalculations } from "./hooks/useTimeCalculations";
-import Login from "./pages/Login";
+import LandingPage from "./pages/LandingPage";
 import { auth, onAuthStateChanged } from "./services/firebase";
 import {
   getUserProfile,
@@ -371,162 +371,168 @@ const App: React.FC = () => {
     );
   }
 
-  // Show login if not authenticated
+  // Show landing page if not authenticated
   if (!user) {
-    return <Login />;
+    return (
+      <div className="w-full">
+        <LandingPage />
+      </div>
+    );
   }
 
   return (
     <ErrorBoundary>
-      <div
-        className={`h-[100dvh] w-full flex items-center justify-center overflow-hidden ${
-          settings.darkMode ? "bg-gray-900" : "bg-[#FAF7F0]"
-        }`}
-      >
-        {/* Onboarding Modal */}
-        {showOnboarding && (
-          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-2 sm:p-3">
-            <div
-              className={`w-full max-w-sm rounded-xl shadow-2xl border ${
-                settings.darkMode
-                  ? "bg-gray-800 border-gray-600 text-gray-100"
-                  : "bg-white border-gray-200 text-slate-800"
-              }`}
-            >
-              <div
-                className={`px-3 sm:px-4 py-3 border-b ${
-                  settings.darkMode ? "border-gray-600" : "border-gray-200"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm sm:text-base font-bold">
-                    Welcome to ShiftPal
-                  </h3>
-                  <button
-                    aria-label="Close onboarding"
-                    onClick={closeOnboarding}
-                    className={
-                      settings.darkMode
-                        ? "text-gray-400 hover:text-gray-200"
-                        : "text-slate-400 hover:text-slate-600"
-                    }
-                  >
-                    ✕
-                  </button>
-                </div>
-              </div>
-              <div className="px-3 sm:px-4 py-3 space-y-2 text-xs sm:text-sm">
-                {onboardingStep === 1 ? (
-                  <>
-                    <p>
-                      Step 1: Track time in <strong>Tracker</strong>.
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      Add your shifts and submit entries when done.
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <p>
-                      Step 2: Save pay in <strong>Pay</strong>.
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      Change the date to save a past day.
-                    </p>
-                  </>
-                )}
-              </div>
-              <div
-                className={`px-3 sm:px-4 py-3 border-t flex justify-end gap-2 ${
-                  settings.darkMode ? "border-gray-600" : "border-gray-200"
-                }`}
-              >
-                {onboardingStep === 1 ? (
-                  <button
-                    aria-label="Next"
-                    onClick={() => setOnboardingStep(2)}
-                    className={
-                      settings.darkMode
-                        ? "bg-gray-700 hover:bg-gray-600 text-gray-100 px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm"
-                        : "bg-slate-800 hover:bg-slate-700 text-white px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm"
-                    }
-                  >
-                    Next
-                  </button>
-                ) : (
-                  <button
-                    aria-label="Finish onboarding"
-                    onClick={closeOnboarding}
-                    className={
-                      settings.darkMode
-                        ? "bg-gray-700 hover:bg-gray-600 text-gray-100 px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm"
-                        : "bg-slate-800 hover:bg-slate-700 text-white px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm"
-                    }
-                  >
-                    Got it
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
+      <div className="w-full max-w-md mx-auto">
         <div
-          className={`w-full h-full sm:max-w-md sm:rounded-3xl sm:border flex flex-col overflow-hidden mx-auto ${
-            settings.darkMode
-              ? "bg-gray-800 sm:border-gray-600/50"
-              : "bg-[#FAF7F0] sm:border-slate-200/50"
+          className={`h-[100dvh] w-full flex items-center justify-center overflow-hidden ${
+            settings.darkMode ? "bg-gray-900" : "bg-[#FAF7F0]"
           }`}
         >
-          <div className="flex-1 overflow-hidden pt-2 pr-6 pl-6 pb-0">
-            {activeView === View.WORK && (
-              <WorkLog
-                settings={settings}
-                entries={entries}
-                setEntries={setEntries}
-                dailySubmissions={dailySubmissions}
-                setDailySubmissions={setDailySubmissions}
-              />
-            )}
-            {activeView === View.PAY && (
-              <PayCalculator
-                totalMinutes={totalDuration.totalMinutes}
-                hourlyRate={hourlyRate}
-                setHourlyRate={setHourlyRate}
-                settings={settings}
-                payHistory={payHistory}
-                setPayHistory={setPayHistory}
-                dailySubmissions={dailySubmissions}
+          {/* Onboarding Modal */}
+          {showOnboarding && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-2 sm:p-3">
+              <div
+                className={`w-full max-w-sm rounded-xl shadow-2xl border ${
+                  settings.darkMode
+                    ? "bg-gray-800 border-gray-600 text-gray-100"
+                    : "bg-white border-gray-200 text-slate-800"
+                }`}
+              >
+                <div
+                  className={`px-3 sm:px-4 py-3 border-b ${
+                    settings.darkMode ? "border-gray-600" : "border-gray-200"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm sm:text-base font-bold">
+                      Welcome to ShiftPal
+                    </h3>
+                    <button
+                      aria-label="Close onboarding"
+                      onClick={closeOnboarding}
+                      className={
+                        settings.darkMode
+                          ? "text-gray-400 hover:text-gray-200"
+                          : "text-slate-400 hover:text-slate-600"
+                      }
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+                <div className="px-3 sm:px-4 py-3 space-y-2 text-xs sm:text-sm">
+                  {onboardingStep === 1 ? (
+                    <>
+                      <p>
+                        Step 1: Track time in <strong>Tracker</strong>.
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        Add your shifts and submit entries when done.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p>
+                        Step 2: Save pay in <strong>Pay</strong>.
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        Change the date to save a past day.
+                      </p>
+                    </>
+                  )}
+                </div>
+                <div
+                  className={`px-3 sm:px-4 py-3 border-t flex justify-end gap-2 ${
+                    settings.darkMode ? "border-gray-600" : "border-gray-200"
+                  }`}
+                >
+                  {onboardingStep === 1 ? (
+                    <button
+                      aria-label="Next"
+                      onClick={() => setOnboardingStep(2)}
+                      className={
+                        settings.darkMode
+                          ? "bg-gray-700 hover:bg-gray-600 text-gray-100 px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm"
+                          : "bg-slate-800 hover:bg-slate-700 text-white px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm"
+                      }
+                    >
+                      Next
+                    </button>
+                  ) : (
+                    <button
+                      aria-label="Finish onboarding"
+                      onClick={closeOnboarding}
+                      className={
+                        settings.darkMode
+                          ? "bg-gray-700 hover:bg-gray-600 text-gray-100 px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm"
+                          : "bg-slate-800 hover:bg-slate-700 text-white px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm"
+                      }
+                    >
+                      Got it
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div
+            className={`w-full h-full sm:max-w-md sm:rounded-3xl sm:border flex flex-col overflow-hidden mx-auto ${
+              settings.darkMode
+                ? "bg-gray-800 sm:border-gray-600/50"
+                : "bg-[#FAF7F0] sm:border-slate-200/50"
+            }`}
+          >
+            <div className="flex-1 overflow-hidden pt-2 pr-6 pl-6 pb-0">
+              {activeView === View.WORK && (
+                <WorkLog
+                  settings={settings}
+                  entries={entries}
+                  setEntries={setEntries}
+                  dailySubmissions={dailySubmissions}
+                  setDailySubmissions={setDailySubmissions}
+                />
+              )}
+              {activeView === View.PAY && (
+                <PayCalculator
+                  totalMinutes={totalDuration.totalMinutes}
+                  hourlyRate={hourlyRate}
+                  setHourlyRate={setHourlyRate}
+                  settings={settings}
+                  payHistory={payHistory}
+                  setPayHistory={setPayHistory}
+                  dailySubmissions={dailySubmissions}
+                  userProfile={userProfile}
+                />
+              )}
+              {activeView === View.LAW_LIMITS && (
+                <LawLimits
+                  totalMinutes={totalDuration.totalMinutes}
+                  settings={settings}
+                />
+              )}
+              {activeView === View.CHAT && <UnionChatbot settings={settings} />}
+              {activeView === View.SETTINGS && (
+                <SettingsComponent
+                  settings={settings}
+                  setSettings={setSettings}
+                  user={user}
+                  userProfile={userProfile}
+                />
+              )}
+              {userIsAdmin && activeView === View.ADMIN && (
+                <AdminPanel user={user} settings={settings} />
+              )}
+            </div>
+            {authChecked && user && (
+              <BottomNav
+                activeView={activeView}
+                setActiveView={setActiveView}
                 userProfile={userProfile}
-              />
-            )}
-            {activeView === View.LAW_LIMITS && (
-              <LawLimits
-                totalMinutes={totalDuration.totalMinutes}
                 settings={settings}
               />
-            )}
-            {activeView === View.CHAT && <UnionChatbot settings={settings} />}
-            {activeView === View.SETTINGS && (
-              <SettingsComponent
-                settings={settings}
-                setSettings={setSettings}
-                user={user}
-                userProfile={userProfile}
-              />
-            )}
-            {userIsAdmin && activeView === View.ADMIN && (
-              <AdminPanel user={user} settings={settings} />
             )}
           </div>
-          {authChecked && user && (
-            <BottomNav
-              activeView={activeView}
-              setActiveView={setActiveView}
-              userProfile={userProfile}
-              settings={settings}
-            />
-          )}
         </div>
       </div>
     </ErrorBoundary>

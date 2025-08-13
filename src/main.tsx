@@ -13,8 +13,6 @@ const root = ReactDOM.createRoot(rootElement);
 
 root.render(
   <React.StrictMode>
-    <div className="w-full h-full max-w-md mx-auto">
-      <App />
-    </div>
+    <App />
   </React.StrictMode>
 );
