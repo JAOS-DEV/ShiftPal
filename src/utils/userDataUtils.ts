@@ -98,7 +98,6 @@ export function loadUserData(userId: string): void {
   localStorage.removeItem("hourlyRate");
   localStorage.removeItem("payHistory");
   localStorage.removeItem("dailySubmissions");
-  localStorage.removeItem("activeView");
   localStorage.removeItem("onboardingComplete");
 
   if (userData) {
@@ -114,8 +113,12 @@ export function loadUserData(userId: string): void {
         localStorage.setItem("payHistory", parsedData.payHistory);
       if (parsedData.dailySubmissions)
         localStorage.setItem("dailySubmissions", parsedData.dailySubmissions);
-      if (parsedData.activeView)
+      if (parsedData.activeView) {
         localStorage.setItem("activeView", parsedData.activeView);
+      } else {
+        // If no saved activeView, remove it to use the default
+        localStorage.removeItem("activeView");
+      }
       if (parsedData.onboardingComplete)
         localStorage.setItem(
           "onboardingComplete",
