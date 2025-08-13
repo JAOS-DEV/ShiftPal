@@ -16,11 +16,9 @@ import {
   TotalPayDisplay,
   PayCalculatorSaveSection,
   PayBreakdownModal,
-  CalculationInfoModal,
-  DateInfoModal,
-  TaxInfoModal,
   PaySaveSuccessToast,
 } from "../components/payCalculator/index";
+import InfoModal from "../components/ui/InfoModal";
 
 interface PayCalculatorProps {
   totalMinutes: number;
@@ -362,26 +360,184 @@ const PayCalculator: React.FC<PayCalculatorProps> = ({
         formatCurrency={formatCurrency}
       />
 
-      {/* Info Modal */}
-      <CalculationInfoModal
-        showInfoModal={showInfoModal}
-        setShowInfoModal={setShowInfoModal}
+      {/* Calculation Info Modal */}
+      <InfoModal
+        isOpen={showInfoModal}
+        onClose={() => setShowInfoModal(false)}
+        title="Calculation Methods"
         settings={settings}
-      />
+      >
+        <div className="space-y-3">
+          <div>
+            <h4
+              className={`font-medium mb-2 ${
+                settings.darkMode ? "text-gray-200" : "text-slate-700"
+              }`}
+            >
+              Time Tracker Mode
+            </h4>
+            <p
+              className={`text-sm leading-relaxed ${
+                settings.darkMode ? "text-gray-300" : "text-slate-600"
+              }`}
+            >
+              Automatically calculates your pay based on the total time tracked
+              in the Time Tracker. This uses the accumulated hours and minutes
+              from your time entries.
+            </p>
+          </div>
+
+          <div>
+            <h4
+              className={`font-medium mb-2 ${
+                settings.darkMode ? "text-gray-200" : "text-slate-700"
+              }`}
+            >
+              Manual Hours Mode
+            </h4>
+            <p
+              className={`text-sm leading-relaxed ${
+                settings.darkMode ? "text-gray-300" : "text-slate-600"
+              }`}
+            >
+              Manually enter your hours and minutes worked. Useful when you want
+              to calculate pay for a specific period or when you have your hours
+              from another source.
+            </p>
+          </div>
+
+          <div
+            className={`pt-2 border-t ${
+              settings.darkMode ? "border-gray-600" : "border-gray-200"
+            }`}
+          >
+            <p
+              className={`text-xs ${
+                settings.darkMode ? "text-gray-400" : "text-slate-500"
+              }`}
+            >
+              💡 <strong>Tip:</strong> Use Time Tracker for automatic
+              calculations from your tracked time, or Manual Hours when you have
+              specific hours to calculate.
+            </p>
+          </div>
+        </div>
+      </InfoModal>
 
       {/* Date Info Modal */}
-      <DateInfoModal
-        showDateInfoModal={showDateInfoModal}
-        setShowDateInfoModal={setShowDateInfoModal}
+      <InfoModal
+        isOpen={showDateInfoModal}
+        onClose={() => setShowDateInfoModal(false)}
+        title="Pay Date Selection"
         settings={settings}
-      />
+      >
+        <div className="space-y-3">
+          <p
+            className={`text-sm leading-relaxed ${
+              settings.darkMode ? "text-gray-300" : "text-slate-600"
+            }`}
+          >
+            Select the date for which you want to save your pay. This date will
+            be used to organize your pay history and can be different from
+            today's date.
+          </p>
+
+          <div
+            className={`p-3 rounded-md ${
+              settings.darkMode ? "bg-gray-700/50" : "bg-gray-50"
+            }`}
+          >
+            <h4
+              className={`font-medium mb-2 ${
+                settings.darkMode ? "text-gray-200" : "text-slate-700"
+              }`}
+            >
+              Examples:
+            </h4>
+            <ul
+              className={`text-sm space-y-1 ${
+                settings.darkMode ? "text-gray-300" : "text-slate-600"
+              }`}
+            >
+              <li>• Use today's date for current pay</li>
+              <li>• Use a past date to save historical pay</li>
+              <li>• Use a future date for advance planning</li>
+            </ul>
+          </div>
+        </div>
+      </InfoModal>
 
       {/* Tax Info Modal */}
-      <TaxInfoModal
-        showTaxInfoModal={showTaxInfoModal}
-        setShowTaxInfoModal={setShowTaxInfoModal}
+      <InfoModal
+        isOpen={showTaxInfoModal}
+        onClose={() => setShowTaxInfoModal(false)}
+        title="Tax & National Insurance"
         settings={settings}
-      />
+      >
+        <div className="space-y-3">
+          <p
+            className={`text-sm leading-relaxed ${
+              settings.darkMode ? "text-gray-300" : "text-slate-600"
+            }`}
+          >
+            ShiftPal can calculate estimated tax and National Insurance
+            deductions from your gross pay to show your take-home amount.
+          </p>
+
+          <div>
+            <h4
+              className={`font-medium mb-2 ${
+                settings.darkMode ? "text-gray-200" : "text-slate-700"
+              }`}
+            >
+              Tax Calculation
+            </h4>
+            <p
+              className={`text-sm leading-relaxed ${
+                settings.darkMode ? "text-gray-300" : "text-slate-600"
+              }`}
+            >
+              Uses current UK tax rates and thresholds. The calculation assumes
+              you're on the standard tax code and doesn't account for other
+              income sources or deductions.
+            </p>
+          </div>
+
+          <div>
+            <h4
+              className={`font-medium mb-2 ${
+                settings.darkMode ? "text-gray-200" : "text-slate-700"
+              }`}
+            >
+              National Insurance
+            </h4>
+            <p
+              className={`text-sm leading-relaxed ${
+                settings.darkMode ? "text-gray-300" : "text-slate-600"
+              }`}
+            >
+              Calculates Class 1 National Insurance contributions based on your
+              earnings. This is automatically deducted from your gross pay.
+            </p>
+          </div>
+
+          <div
+            className={`p-3 rounded-md ${
+              settings.darkMode ? "bg-gray-700/50" : "bg-gray-50"
+            }`}
+          >
+            <p
+              className={`text-xs ${
+                settings.darkMode ? "text-gray-400" : "text-slate-500"
+              }`}
+            >
+              ⚠️ <strong>Note:</strong> These are estimates only. Your actual
+              tax and NI may vary based on your specific circumstances, other
+              income sources, and tax code.
+            </p>
+          </div>
+        </div>
+      </InfoModal>
 
       {/* Internal Navigation Tabs */}
       <PayCalculatorTabs

@@ -14,8 +14,8 @@ import { SubmitDaySection } from "../components/timeTracker";
 import { TotalSection } from "../components/timeTracker";
 import { HistoryView } from "../components/timeTracker";
 import { EditSubmissionModal } from "../components/modals";
-import { TimeFormatModal } from "../components/timeTracker";
-import { SubmissionInfoModal } from "../components/modals";
+
+import InfoModal from "../components/ui/InfoModal";
 
 interface TimeTrackerProps {
   entries: TimeEntry[];
@@ -568,18 +568,127 @@ const TimeTracker: React.FC<TimeTrackerProps> = ({
       />
 
       {/* Time Format Modal */}
-      <TimeFormatModal
-        visible={showTimeFormatModal}
-        settings={settings}
+      <InfoModal
+        isOpen={showTimeFormatModal}
         onClose={() => setShowTimeFormatModal(false)}
-      />
+        title="Time Input Format"
+        settings={settings}
+      >
+        <div className="space-y-3">
+          <div>
+            <h4
+              className={`font-medium mb-2 ${
+                settings.darkMode ? "text-gray-200" : "text-slate-700"
+              }`}
+            >
+              24-Hour Format
+            </h4>
+            <p
+              className={`text-sm leading-relaxed ${
+                settings.darkMode ? "text-gray-300" : "text-slate-600"
+              }`}
+            >
+              Enter times using 24-hour format (HH:MM). This means 1:00 PM is
+              13:00, 2:30 PM is 14:30, and midnight is 00:00.
+            </p>
+          </div>
+
+          <div>
+            <h4
+              className={`font-medium mb-2 ${
+                settings.darkMode ? "text-gray-200" : "text-slate-700"
+              }`}
+            >
+              Valid Examples
+            </h4>
+            <div
+              className={`text-sm space-y-1 ${
+                settings.darkMode ? "text-gray-300" : "text-slate-600"
+              }`}
+            >
+              <p>
+                • <strong>09:30</strong> - 9:30 AM
+              </p>
+              <p>
+                • <strong>13:45</strong> - 1:45 PM
+              </p>
+              <p>
+                • <strong>17:00</strong> - 5:00 PM
+              </p>
+              <p>
+                • <strong>00:00</strong> - Midnight
+              </p>
+              <p>
+                • <strong>23:59</strong> - 11:59 PM
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h4
+              className={`font-medium mb-2 ${
+                settings.darkMode ? "text-gray-200" : "text-slate-700"
+              }`}
+            >
+              Common Mistakes
+            </h4>
+            <div
+              className={`text-sm space-y-1 ${
+                settings.darkMode ? "text-gray-300" : "text-slate-600"
+              }`}
+            >
+              <p>• Don't use AM/PM (use 13:00, not 1:00 PM)</p>
+              <p>• Always use two digits (09:30, not 9:30)</p>
+              <p>• Use colon separator (09:30, not 0930)</p>
+            </div>
+          </div>
+
+          <div
+            className={`pt-2 border-t ${
+              settings.darkMode ? "border-gray-600" : "border-gray-200"
+            }`}
+          >
+            <p
+              className={`text-xs ${
+                settings.darkMode ? "text-gray-400" : "text-slate-500"
+              }`}
+            >
+              💡 <strong>Tip:</strong> For overnight shifts, end time can be
+              after midnight (e.g., 06:00 for 6 AM the next day).
+            </p>
+          </div>
+        </div>
+      </InfoModal>
 
       {/* Submission Info Modal */}
-      <SubmissionInfoModal
-        visible={showSubmissionInfoModal}
-        settings={settings}
+      <InfoModal
+        isOpen={showSubmissionInfoModal}
         onClose={() => setShowSubmissionInfoModal(false)}
-      />
+        title="What's a submission?"
+        settings={settings}
+      >
+        <div className="space-y-3">
+          <p
+            className={`text-sm leading-relaxed ${
+              settings.darkMode ? "text-gray-300" : "text-slate-600"
+            }`}
+          >
+            Submissions are a snapshot of the current entries. When you submit
+            entries, your current entries are saved to History so you can review
+            totals later.
+          </p>
+          <p
+            className={`text-sm leading-relaxed ${
+              settings.darkMode ? "text-gray-300" : "text-slate-600"
+            }`}
+          >
+            You can keep adding entries during the day and submit multiple
+            entries for a day and they will be added to the days History and
+            show the total. You can also save pay in the Pay tab; it uses your
+            tracked time for that date. (If in time tracker mode)
+          </p>
+        </div>
+      </InfoModal>
     </div>
   );
 };
