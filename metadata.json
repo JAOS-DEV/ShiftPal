@@ -1,0 +1,6 @@
+{
+  "name": "ShiftPal",
+  "description": "An application for professional drivers to track their driving time, calculate pay, monitor compliance with legal limits, and get advice from an AI union representative.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}

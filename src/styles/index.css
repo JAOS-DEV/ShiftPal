@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Test class to verify Tailwind is working */
+.tailwind-test {
+  @apply bg-blue-500 text-white p-4 rounded;
+}
+
+/* Additional base styles */
+@layer base {
+  html {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+  }
+
+  body {
+    background-color: #faf7f0;
+  }
+}
