@@ -1,5 +1,6 @@
 import React from "react";
 import { Settings as SettingsType } from "../../types";
+import { parseAndRoundFloat } from "../../utils/formatUtils";
 
 interface SettingsEarningGoalsProps {
   settings: SettingsType;
@@ -44,7 +45,7 @@ const SettingsEarningGoals: React.FC<SettingsEarningGoalsProps> = ({
             value={settings.weeklyGoal || ""}
             onChange={(e) =>
               updateSettings({
-                weeklyGoal: parseFloat(e.target.value) || 0,
+                weeklyGoal: parseAndRoundFloat(e.target.value),
               })
             }
             placeholder="e.g., 800"
@@ -73,7 +74,7 @@ const SettingsEarningGoals: React.FC<SettingsEarningGoalsProps> = ({
             value={settings.monthlyGoal || ""}
             onChange={(e) =>
               updateSettings({
-                monthlyGoal: parseFloat(e.target.value) || 0,
+                monthlyGoal: parseAndRoundFloat(e.target.value),
               })
             }
             placeholder="e.g., 3200"

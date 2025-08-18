@@ -10,6 +10,7 @@ interface WorkLogProps {
   setEntries: (entries: TimeEntry[]) => void;
   dailySubmissions: DailySubmission[];
   setDailySubmissions: (submissions: DailySubmission[]) => void;
+  isLoadingCloudData?: boolean; // Add cloud sync loading state
 }
 
 const WorkLog: React.FC<WorkLogProps> = ({
@@ -18,6 +19,7 @@ const WorkLog: React.FC<WorkLogProps> = ({
   setEntries,
   dailySubmissions,
   setDailySubmissions,
+  isLoadingCloudData = false, // Add default value
 }) => {
   // Clear any existing default data on first load only
   React.useEffect(() => {
@@ -81,6 +83,7 @@ const WorkLog: React.FC<WorkLogProps> = ({
           settings={settings}
           dailySubmissions={dailySubmissions}
           setDailySubmissions={setDailySubmissions}
+          isLoadingCloudData={isLoadingCloudData}
         />
       </main>
     </div>

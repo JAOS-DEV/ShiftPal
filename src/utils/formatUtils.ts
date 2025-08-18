@@ -23,3 +23,12 @@ export const formatPercentage = (
 ): string => {
   return `${formatNumber(value, decimals)}%`;
 };
+
+// Safely parse and round numbers to avoid floating point precision issues
+export const parseAndRoundFloat = (
+  value: string,
+  decimals: number = 2
+): number => {
+  const parsed = parseFloat(value) || 0;
+  return Math.round(parsed * Math.pow(10, decimals)) / Math.pow(10, decimals);
+};

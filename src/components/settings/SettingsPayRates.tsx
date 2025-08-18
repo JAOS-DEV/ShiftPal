@@ -7,6 +7,7 @@ import {
 import { isPro } from "../../services/firestoreStorage";
 import { UserProfile } from "../../types";
 import ProBadge from "./ProBadge";
+import { parseAndRoundFloat } from "../../utils/formatUtils";
 
 interface SettingsPayRatesProps {
   settings: SettingsType;
@@ -83,7 +84,7 @@ const SettingsPayRates: React.FC<SettingsPayRatesProps> = ({
                   value={rate.rate || ""}
                   onChange={(e) => {
                     const newRates = [...(settings.standardRates || [])];
-                    newRates[index].rate = parseFloat(e.target.value) || 0;
+                    newRates[index].rate = parseAndRoundFloat(e.target.value);
                     updateSettings({ standardRates: newRates });
                   }}
                   className={`flex-1 p-0.5 text-xs bg-transparent border rounded focus:ring-1 focus:ring-gray-600 ${
@@ -208,7 +209,7 @@ const SettingsPayRates: React.FC<SettingsPayRatesProps> = ({
                   value={rate.rate || ""}
                   onChange={(e) => {
                     const newRates = [...(settings.overtimeRates || [])];
-                    newRates[index].rate = parseFloat(e.target.value) || 0;
+                    newRates[index].rate = parseAndRoundFloat(e.target.value);
                     updateSettings({ overtimeRates: newRates });
                   }}
                   className={`flex-1 p-0.5 text-xs bg-transparent border rounded focus:ring-1 focus:ring-gray-600 ${

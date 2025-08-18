@@ -19,13 +19,14 @@ import InfoModal from "../components/ui/InfoModal";
 
 interface TimeTrackerProps {
   entries: TimeEntry[];
-  addEntry: (startTime: string, endTime: string) => void;
-  removeEntry: (id: number) => void;
-  onDailySubmit?: (submission: DailySubmission) => void;
-  clearEntries?: () => void;
-  settings: Settings;
+  addEntry: (entry: TimeEntry) => void;
+  removeEntry: (id: string) => void;
+  onDailySubmit: (submission: DailySubmission) => void;
+  clearEntries: () => void;
   dailySubmissions: DailySubmission[];
   setDailySubmissions: (submissions: DailySubmission[]) => void;
+  settings: Settings;
+  isLoadingCloudData?: boolean; // Add cloud sync loading state
 }
 
 const TimeTracker: React.FC<TimeTrackerProps> = ({
@@ -34,9 +35,10 @@ const TimeTracker: React.FC<TimeTrackerProps> = ({
   removeEntry,
   onDailySubmit,
   clearEntries,
-  settings,
   dailySubmissions,
   setDailySubmissions,
+  settings,
+  isLoadingCloudData = false, // Add default value
 }) => {
   const [activeTab, setActiveTab] = useState<"tracker" | "history">("tracker");
   const [startTime, setStartTime] = useState("");
@@ -546,6 +548,7 @@ const TimeTracker: React.FC<TimeTrackerProps> = ({
             calculateDuration={calculateDuration}
             formatDurationWithMinutes={formatDurationWithMinutes}
             calculateTotalDuration={calculateTotalDuration}
+            isLoadingCloudData={isLoadingCloudData}
           />
         </>
       )}

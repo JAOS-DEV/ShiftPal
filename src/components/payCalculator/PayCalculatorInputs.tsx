@@ -1,5 +1,6 @@
 import React from "react";
 import { Settings } from "../../types";
+import { parseAndRoundFloat } from "../../utils/formatUtils";
 
 interface PayCalculatorInputsProps {
   useManualHours: boolean;
@@ -197,7 +198,7 @@ const PayCalculatorInputs: React.FC<PayCalculatorInputsProps> = ({
               min="0"
               value={overtimeRate || ""}
               onChange={(e) => {
-                setOvertimeRate(parseFloat(e.target.value) || 0);
+                setOvertimeRate(parseAndRoundFloat(e.target.value));
                 // Clear dropdown selection when user manually edits
                 setSelectedOvertimeRateId("");
               }}

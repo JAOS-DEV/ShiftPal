@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Settings as SettingsType } from "../../types";
 import { isPro } from "../../services/firestoreStorage";
+import { parseAndRoundFloat } from "../../utils/formatUtils";
 import { UserProfile } from "../../types";
 import ProBadge from "./ProBadge";
 
@@ -114,7 +115,7 @@ const SettingsTaxNI: React.FC<SettingsTaxNIProps> = ({
                 value={Math.round(settings.taxRate * 100) || ""}
                 onChange={(e) =>
                   updateSettings({
-                    taxRate: (parseFloat(e.target.value) || 0) / 100,
+                    taxRate: parseAndRoundFloat(e.target.value) / 100,
                   })
                 }
                 placeholder="e.g., 20"

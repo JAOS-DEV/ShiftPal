@@ -34,6 +34,7 @@ interface HistoryViewProps {
     minutes: number;
     totalMinutes: number;
   };
+  isLoadingCloudData?: boolean; // Add cloud sync loading state
 }
 
 const HistoryView: React.FC<HistoryViewProps> = ({
@@ -57,6 +58,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
   calculateDuration,
   formatDurationWithMinutes,
   calculateTotalDuration,
+  isLoadingCloudData,
 }) => {
   // Height state for scroll container
   const [historyListHeight, setHistoryListHeight] = useState(400);
@@ -136,6 +138,22 @@ const HistoryView: React.FC<HistoryViewProps> = ({
           navigateMonth={navigateMonth}
           goToCurrentPeriod={goToCurrentPeriod}
         />
+
+        {/* Cloud Sync Indicator */}
+        {isLoadingCloudData && (
+          <div
+            className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm ${
+              settings.darkMode
+                ? "bg-blue-900/30 border border-blue-700/50 text-blue-300"
+                : "bg-blue-50 border border-blue-200 text-blue-700"
+            }`}
+          >
+            <div
+              className={`w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin`}
+            ></div>
+            <span>Syncing with cloud...</span>
+          </div>
+        )}
 
         <h2
           className={`text-xs font-bold tracking-wider uppercase mb-2 ${

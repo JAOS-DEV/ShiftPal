@@ -34,6 +34,10 @@ import {
   switchToUser,
   saveUserData,
   loadUserData,
+  getDefaultStorageMode,
+  detectRoleChange,
+  migrateToCloudStorage,
+  mergeOfflineDataWithCloud,
 } from "./utils/userDataUtils";
 
 const App: React.FC = () => {
@@ -97,6 +101,9 @@ const App: React.FC = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const applyingCloudRef = useRef(false);
 
+  // Cloud sync state
+  const [isLoadingCloudData, setIsLoadingCloudData] = useState(false);
+
   // Listen for storage changes (when user signs out in another tab)
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
@@ -146,22 +153,73 @@ const App: React.FC = () => {
 
           setUserProfile(profile);
 
+          // Initialize storage mode based on user role
+          const currentSettings = JSON.parse(
+            localStorage.getItem("settings") || "{}"
+          );
+          const defaultStorageMode = getDefaultStorageMode(profile?.role);
+
+          // Check if storage mode needs to be initialized or updated
+          let updatedSettings = { ...currentSettings };
+
+          // If no storage mode is set, use the default for this user role
+          if (!updatedSettings.storageMode) {
+            updatedSettings.storageMode = defaultStorageMode;
+          }
+
           // Ensure pro features are properly gated based on user profile
           if (profile && !isPro(profile)) {
             // User is not pro - ensure pro features are disabled
-            const currentSettings = JSON.parse(
-              localStorage.getItem("settings") || "{}"
-            );
-            const updatedSettings = ensureProFeaturesDisabled(currentSettings);
-
-            // If settings changed, update localStorage and state
+            updatedSettings = ensureProFeaturesDisabled(updatedSettings);
+          } else if (profile && isPro(profile)) {
+            // User is pro - ensure they have access to cloud storage
+            // If they're currently on local and this is their default (first time pro), upgrade them
             if (
-              JSON.stringify(currentSettings) !==
-              JSON.stringify(updatedSettings)
+              updatedSettings.storageMode === "local" &&
+              defaultStorageMode === "cloud"
             ) {
-              localStorage.setItem("settings", JSON.stringify(updatedSettings));
-              setSettings(updatedSettings);
+              console.log("User upgraded to pro - enabling cloud storage");
+              updatedSettings.storageMode = "cloud";
+
+              // Merge offline data with cloud and migrate (async, non-blocking)
+              mergeOfflineDataWithCloud(firebaseUser.uid)
+                .then(async (mergedData) => {
+                  if (mergedData.hasLocalChanges) {
+                    // User has local changes, migrate them to cloud
+                    const migrationSuccess = await migrateToCloudStorage(
+                      firebaseUser.uid
+                    );
+                    if (migrationSuccess) {
+                      console.log(
+                        "Successfully migrated local data to cloud storage"
+                      );
+                      // Update local state with merged data
+                      setEntries(mergedData.timeEntries);
+                      setDailySubmissions(mergedData.dailySubmissions);
+                      setPayHistory(mergedData.payHistory);
+                    } else {
+                      console.warn(
+                        "Failed to migrate local data to cloud storage"
+                      );
+                    }
+                  } else {
+                    console.log(
+                      "No local changes to migrate - cloud data is current"
+                    );
+                  }
+                })
+                .catch((error) => {
+                  console.error("Failed to merge offline data:", error);
+                });
             }
+          }
+
+          // If settings changed, update localStorage and state
+          if (
+            JSON.stringify(currentSettings) !== JSON.stringify(updatedSettings)
+          ) {
+            localStorage.setItem("settings", JSON.stringify(updatedSettings));
+            setSettings(updatedSettings);
           }
         } catch (error) {
           console.error("Error loading user profile:", error);
@@ -193,30 +251,76 @@ const App: React.FC = () => {
           (snap) => {
             if (snap.exists()) {
               const newProfile = snap.data() as UserProfile;
+              const oldProfile = userProfile;
               setUserProfile(newProfile);
 
-              // Check if pro status changed and update settings accordingly
+              // Check for role changes and handle accordingly
+              const roleChange = detectRoleChange(
+                oldProfile?.role,
+                newProfile.role
+              );
               const currentSettings = JSON.parse(
                 localStorage.getItem("settings") || "{}"
               );
-              const userIsPro = isPro(newProfile);
+              let updatedSettings = { ...currentSettings };
 
-              if (!userIsPro) {
-                // User lost pro access - disable pro features
-                const updatedSettings =
-                  ensureProFeaturesDisabled(currentSettings);
+              if (roleChange === "upgrade") {
+                // User upgraded to pro - enable cloud storage and migrate data
+                console.log("User role upgraded - enabling cloud storage");
+                updatedSettings.storageMode = "cloud";
 
-                // If settings changed, update localStorage and state
-                if (
-                  JSON.stringify(currentSettings) !==
+                // Merge offline data with cloud and migrate (async, non-blocking)
+                mergeOfflineDataWithCloud(user.uid)
+                  .then(async (mergedData) => {
+                    if (mergedData.hasLocalChanges) {
+                      // User has local changes, migrate them to cloud
+                      const migrationSuccess = await migrateToCloudStorage(
+                        user.uid
+                      );
+                      if (migrationSuccess) {
+                        console.log(
+                          "Successfully migrated local data to cloud storage on role upgrade"
+                        );
+                        // Update local state with merged data
+                        setEntries(mergedData.timeEntries);
+                        setDailySubmissions(mergedData.dailySubmissions);
+                        setPayHistory(mergedData.payHistory);
+                      } else {
+                        console.warn(
+                          "Failed to migrate local data to cloud storage on role upgrade"
+                        );
+                      }
+                    } else {
+                      console.log(
+                        "No local changes to migrate on role upgrade - cloud data is current"
+                      );
+                    }
+                  })
+                  .catch((error) => {
+                    console.error(
+                      "Failed to merge offline data on role upgrade:",
+                      error
+                    );
+                  });
+              } else if (roleChange === "downgrade") {
+                // User downgraded to free - disable pro features and force local storage
+                console.log("User role downgraded - disabling pro features");
+                updatedSettings = ensureProFeaturesDisabled(updatedSettings);
+              } else if (!isPro(newProfile)) {
+                // User is not pro (could be a refresh, not necessarily a change)
+                updatedSettings = ensureProFeaturesDisabled(updatedSettings);
+              }
+
+              // If settings changed, update localStorage and state
+              if (
+                JSON.stringify(currentSettings) !==
+                JSON.stringify(updatedSettings)
+              ) {
+                localStorage.setItem(
+                  "settings",
                   JSON.stringify(updatedSettings)
-                ) {
-                  localStorage.setItem(
-                    "settings",
-                    JSON.stringify(updatedSettings)
-                  );
-                  setSettings(updatedSettings);
-                }
+                );
+                setSettings(updatedSettings);
               }
             }
           },
@@ -284,6 +388,30 @@ const App: React.FC = () => {
     userProfile,
   ]);
 
+  // Auto-save to multi-user storage when localStorage changes (debounced)
+  useEffect(() => {
+    if (!authChecked || !user) return;
+
+    let timeoutId: number | undefined;
+    const performMultiUserSave = () => {
+      console.log(`[Auto-save] Saving data for user ${user.uid}`);
+      saveUserData(user.uid);
+    };
+
+    // Debounce saves to avoid excessive writes
+    timeoutId = window.setTimeout(performMultiUserSave, 1000);
+    return () => {
+      if (timeoutId) window.clearTimeout(timeoutId);
+    };
+  }, [
+    authChecked,
+    user,
+    JSON.stringify(entries),
+    JSON.stringify(dailySubmissions),
+    JSON.stringify(payHistory),
+    JSON.stringify(settings),
+  ]);
+
   // Cloud read mode: subscribe when in cloud storage mode
   useEffect(() => {
     if (!authChecked || !user) return;
@@ -291,7 +419,16 @@ const App: React.FC = () => {
     // Gate cloud reads to pro/admin only so free users don't re-apply cloud settings
     const userIsPro = isPro(userProfile);
     if (!userIsPro) return;
+
+    setIsLoadingCloudData(true);
     let unsubscribers: Array<() => void> = [];
+    let cloudDataReady = false;
+    let pendingCloudData: {
+      settings?: any;
+      timeEntries?: any[];
+      dailySubmissions?: any[];
+      payHistory?: any[];
+    } = {};
 
     const setup = async () => {
       const { onSnapshot, doc, collection } = await import(
@@ -305,19 +442,30 @@ const App: React.FC = () => {
       const unsubSettings = onSnapshot(settingsDoc, (snap) => {
         const data = snap.data() as any;
         if (!data) return;
-        applyingCloudRef.current = true;
-        const lastSyncIso = data.lastSyncAt?.toDate
-          ? data.lastSyncAt.toDate().toISOString()
-          : data.lastSyncAt;
-        const incoming = { ...data, lastSyncAt: lastSyncIso } as Settings;
-        setSettings((prev) => ({ ...prev, ...incoming, storageMode: "cloud" }));
-        localStorage.setItem(
-          "settings",
-          JSON.stringify({ ...incoming, storageMode: "cloud" })
-        );
-        setTimeout(() => {
-          applyingCloudRef.current = false;
-        }, 50);
+
+        if (cloudDataReady) {
+          // Apply cloud data immediately
+          applyingCloudRef.current = true;
+          const lastSyncIso = data.lastSyncAt?.toDate
+            ? data.lastSyncAt.toDate().toISOString()
+            : data.lastSyncAt;
+          const incoming = { ...data, lastSyncAt: lastSyncIso } as Settings;
+          setSettings((prev) => ({
+            ...prev,
+            ...incoming,
+            storageMode: "cloud",
+          }));
+          localStorage.setItem(
+            "settings",
+            JSON.stringify({ ...incoming, storageMode: "cloud" })
+          );
+          setTimeout(() => {
+            applyingCloudRef.current = false;
+          }, 50);
+        } else {
+          // Store for later application
+          pendingCloudData.settings = data;
+        }
       });
       unsubscribers.push(unsubSettings);
 
@@ -329,13 +477,20 @@ const App: React.FC = () => {
       ) => {
         const colRef = collection(userRoot, colName);
         const unsub = onSnapshot(colRef, (qs) => {
-          applyingCloudRef.current = true;
           const arr = qs.docs.map((d) => d.data());
-          setter(arr as any);
-          localStorage.setItem(storageKey, JSON.stringify(arr));
-          setTimeout(() => {
-            applyingCloudRef.current = false;
-          }, 50);
+
+          if (cloudDataReady) {
+            // Apply cloud data immediately
+            applyingCloudRef.current = true;
+            setter(arr as any);
+            localStorage.setItem(storageKey, JSON.stringify(arr));
+            setTimeout(() => {
+              applyingCloudRef.current = false;
+            }, 50);
+          } else {
+            // Store for later application
+            pendingCloudData[colName as keyof typeof pendingCloudData] = arr;
+          }
         });
         unsubscribers.push(unsub);
       };
@@ -343,12 +498,77 @@ const App: React.FC = () => {
       subscribeCol("timeEntries", setEntries, "timeEntries");
       subscribeCol("dailySubmissions", setDailySubmissions, "dailySubmissions");
       subscribeCol("payHistory", setPayHistory, "payHistory");
+
+      // Wait for initial cloud data to arrive, then apply it
+      const checkAndApplyCloudData = () => {
+        if (Object.keys(pendingCloudData).length > 0) {
+          // Apply all pending cloud data
+          applyingCloudRef.current = true;
+
+          if (pendingCloudData.settings) {
+            const lastSyncIso = pendingCloudData.settings.lastSyncAt?.toDate
+              ? pendingCloudData.settings.lastSyncAt.toDate().toISOString()
+              : pendingCloudData.settings.lastSyncAt;
+            const incoming = {
+              ...pendingCloudData.settings,
+              lastSyncAt: lastSyncIso,
+            } as Settings;
+            setSettings((prev) => ({
+              ...prev,
+              ...incoming,
+              storageMode: "cloud",
+            }));
+            localStorage.setItem(
+              "settings",
+              JSON.stringify({ ...incoming, storageMode: "cloud" })
+            );
+          }
+
+          if (pendingCloudData.timeEntries) {
+            setEntries(pendingCloudData.timeEntries);
+            localStorage.setItem(
+              "timeEntries",
+              JSON.stringify(pendingCloudData.timeEntries)
+            );
+          }
+
+          if (pendingCloudData.dailySubmissions) {
+            setDailySubmissions(pendingCloudData.dailySubmissions);
+            localStorage.setItem(
+              "dailySubmissions",
+              JSON.stringify(pendingCloudData.dailySubmissions)
+            );
+          }
+
+          if (pendingCloudData.payHistory) {
+            setPayHistory(pendingCloudData.payHistory);
+            localStorage.setItem(
+              "payHistory",
+              JSON.stringify(pendingCloudData.payHistory)
+            );
+          }
+
+          setTimeout(() => {
+            applyingCloudRef.current = false;
+          }, 50);
+
+          cloudDataReady = true;
+          setIsLoadingCloudData(false);
+        } else {
+          // Keep checking until we have data
+          setTimeout(checkAndApplyCloudData, 100);
+        }
+      };
+
+      // Start checking for cloud data
+      setTimeout(checkAndApplyCloudData, 500);
     };
     setup();
 
     return () => {
       unsubscribers.forEach((u) => u());
       applyingCloudRef.current = false;
+      setIsLoadingCloudData(false);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authChecked, user, settings.storageMode, userProfile]);
@@ -491,6 +711,7 @@ const App: React.FC = () => {
                   setEntries={setEntries}
                   dailySubmissions={dailySubmissions}
                   setDailySubmissions={setDailySubmissions}
+                  isLoadingCloudData={isLoadingCloudData}
                 />
               )}
               {activeView === View.PAY && (
@@ -503,6 +724,7 @@ const App: React.FC = () => {
                   setPayHistory={setPayHistory}
                   dailySubmissions={dailySubmissions}
                   userProfile={userProfile}
+                  isLoadingCloudData={isLoadingCloudData}
                 />
               )}
               {activeView === View.LAW_LIMITS && (

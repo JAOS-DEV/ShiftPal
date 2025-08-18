@@ -35,20 +35,31 @@ function useLocalStorage<T>(key: string, initialValue: T) {
       // Save to local storage
       if (typeof window !== "undefined") {
         window.localStorage.setItem(key, JSON.stringify(valueToStore));
+        // Debug logging for tracking localStorage writes
+        if (
+          key === "timeEntries" ||
+          key === "payHistory" ||
+          key === "dailySubmissions"
+        ) {
+          console.log(`[useLocalStorage] Saved ${key}:`, valueToStore);
+        }
       }
     } catch (error) {
       console.warn(`Error setting localStorage key "${key}":`, error);
     }
   };
 
+  // Read from localStorage on mount
   useEffect(() => {
-    setStoredValue(readValue());
-  }, []);
+    const currentValue = readValue();
+    setStoredValue(currentValue);
+  }, []); // Only run on mount
 
   // Listen for user data loaded events to update state when user switches
   useEffect(() => {
     const handleUserDataLoaded = () => {
-      setStoredValue(readValue());
+      const currentValue = readValue();
+      setStoredValue(currentValue);
     };
 
     window.addEventListener("userDataLoaded", handleUserDataLoaded);

@@ -190,10 +190,14 @@ export async function createUserProfile(
   email: string
 ): Promise<void> {
   const now = new Date().toISOString();
+
+  // Get the default role for new users from admin settings
+  const defaultRole = await getDefaultUserRole();
+
   const profile: UserProfile = {
     uid,
     email,
-    role: "free",
+    role: defaultRole,
     createdAt: now,
     updatedAt: now,
   };
@@ -369,5 +373,76 @@ export async function debugFirestoreStructure(): Promise<void> {
     }
   } catch (error) {
     console.error("Debug error:", error);
+  }
+}
+
+// Default user role management functions
+export async function getDefaultUserRole(): Promise<UserRole> {
+  try {
+    const defaultRoleDoc = await getDoc(
+      doc(db, "adminSettings", "defaultUserRole")
+    );
+    if (defaultRoleDoc.exists()) {
+      return defaultRoleDoc.data().role as UserRole;
+    }
+    // Return "beta" as the default if no setting exists
+    return "beta";
+  } catch (error) {
+    console.error("Error getting default user role:", error);
+    // Return "beta" as fallback for any errors
+    // This ensures new users get a role even if there are issues
+    return "beta";
+  }
+}
+
+export async function updateDefaultUserRole(role: UserRole): Promise<void> {
+  try {
+    await setDoc(doc(db, "adminSettings", "defaultUserRole"), {
+      role,
+      updatedAt: serverTimestamp(),
+      updatedByUid: auth.currentUser?.uid ?? null,
+      updatedByEmail: auth.currentUser?.email ?? null,
+    });
+
+    // Write admin audit log
+    try {
+      await addDoc(collection(db, "adminLogs"), {
+        action: "default_role_update",
+        newRole: role,
+        changedByUid: auth.currentUser?.uid ?? null,
+        changedByEmail: auth.currentUser?.email ?? null,
+        at: serverTimestamp(),
+      });
+    } catch (e) {
+      // Non-fatal; logging best effort
+      console.warn("Failed to log admin action", e);
+    }
+  } catch (error) {
+    console.error("Error updating default user role:", error);
+    throw error;
+  }
+}
+
+// Initialize the default role setting if it doesn't exist
+export async function initializeDefaultUserRole(): Promise<void> {
+  try {
+    const defaultRoleDoc = await getDoc(
+      doc(db, "adminSettings", "defaultUserRole")
+    );
+
+    if (!defaultRoleDoc.exists()) {
+      // Create the default setting with "beta" role
+      await setDoc(doc(db, "adminSettings", "defaultUserRole"), {
+        role: "beta" as UserRole,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        createdByUid: auth.currentUser?.uid ?? null,
+        createdByEmail: auth.currentUser?.email ?? null,
+      });
+      console.log("Default user role initialized to 'beta'");
+    }
+  } catch (error) {
+    console.error("Error initializing default user role:", error);
+    // Don't throw - this is just initialization
   }
 }

@@ -29,6 +29,7 @@ interface PayCalculatorProps {
   setPayHistory: (history: DailyPay[]) => void;
   dailySubmissions: DailySubmission[];
   userProfile?: UserProfile | null;
+  isLoadingCloudData?: boolean; // Add cloud sync loading state
 }
 
 const PayCalculator: React.FC<PayCalculatorProps> = ({
@@ -40,6 +41,7 @@ const PayCalculator: React.FC<PayCalculatorProps> = ({
   setPayHistory,
   dailySubmissions,
   userProfile,
+  isLoadingCloudData = false, // Add default value
 }) => {
   const [activeTab, setActiveTab] = useState<"calculator" | "history">(
     "calculator"
@@ -614,6 +616,7 @@ const PayCalculator: React.FC<PayCalculatorProps> = ({
             payHistory={payHistory}
             setPayHistory={setPayHistory}
             settings={settings}
+            isLoadingCloudData={isLoadingCloudData}
           />
         </div>
       )}

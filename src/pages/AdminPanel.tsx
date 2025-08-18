@@ -7,7 +7,12 @@ import {
 } from "../services/firestoreStorage";
 import type { User } from "firebase/auth";
 import { SubscriptionExpiryModal } from "../components/modals";
-import { AdminStats, AdminActions, AdminUserList } from "../components/admin";
+import {
+  AdminStats,
+  AdminActions,
+  AdminUserList,
+  DefaultRoleManager,
+} from "../components/admin";
 
 interface AdminPanelProps {
   user: User;
@@ -276,6 +281,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ user, settings }) => {
             onCheckExpiredSubscriptions={handleCheckExpiredSubscriptions}
             checkingExpired={checkingExpired}
           />
+
+          {/* Default Role Manager */}
+          <DefaultRoleManager settings={settings} />
 
           {/* Users List */}
           <AdminUserList

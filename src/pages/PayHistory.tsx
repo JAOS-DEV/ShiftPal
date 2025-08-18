@@ -13,12 +13,14 @@ interface PayHistoryProps {
   payHistory: DailyPay[];
   setPayHistory: (history: DailyPay[]) => void;
   settings: Settings;
+  isLoadingCloudData?: boolean; // Add cloud sync loading state
 }
 
 const PayHistory: React.FC<PayHistoryProps> = ({
   payHistory,
   setPayHistory,
   settings,
+  isLoadingCloudData = false, // Add default value
 }) => {
   // Use shared period navigation hook
   const {
@@ -220,8 +222,13 @@ const PayHistory: React.FC<PayHistoryProps> = ({
 
   const handleSaveEdit = (updatedPay: DailyPay) => {
     if (updatedPay.id.startsWith("duplicate-")) {
-      // This is a new duplicated entry, add it to pay history
-      setPayHistory([updatedPay, ...payHistory]);
+      // This is a new duplicated entry, give it a proper unique ID and add it to pay history
+      const newPay: DailyPay = {
+        ...updatedPay,
+        id: `${Date.now()}`, // Generate a proper unique ID
+        timestamp: new Date().toISOString(),
+      };
+      setPayHistory([newPay, ...payHistory]);
     } else {
       // This is an existing entry being edited, update it
       setPayHistory(
@@ -311,6 +318,22 @@ const PayHistory: React.FC<PayHistoryProps> = ({
           navigateMonth={navigateMonth}
           goToCurrentPeriod={goToCurrentPeriod}
         />
+
+        {/* Cloud Sync Indicator */}
+        {isLoadingCloudData && (
+          <div
+            className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm ${
+              settings.darkMode
+                ? "bg-blue-900/30 border border-blue-700/50 text-blue-300"
+                : "bg-blue-50 border border-blue-200 text-blue-700"
+            }`}
+          >
+            <div
+              className={`w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin`}
+            ></div>
+            <span>Syncing with cloud...</span>
+          </div>
+        )}
 
         {/* Summary */}
         <div ref={summaryRef}>
