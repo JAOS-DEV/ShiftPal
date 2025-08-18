@@ -97,7 +97,7 @@ const SettingsAppInfo: React.FC<SettingsAppInfoProps> = ({
             settings.darkMode ? "text-gray-400" : "text-slate-600"
           }`}
         >
-          <p>Beta version 2.0.0</p>
+          <p>Beta version 2.1.0</p>
         </div>
       </div>
     </>

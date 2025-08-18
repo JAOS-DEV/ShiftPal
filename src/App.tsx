@@ -41,6 +41,75 @@ import {
 } from "./utils/userDataUtils";
 
 const App: React.FC = () => {
+  // App version for cache busting - sync with package.json
+  const APP_VERSION = "2.1.0"; // Update this when you deploy changes
+
+  // Changelog content - edit this for each release
+  const CHANGELOG = {
+    version: "2.1.0",
+    title: "What's New in ShiftPal 2.1.0",
+    changes: [
+      "🎨 Dark mode support for all edit modals",
+      "💾 Fixed data not saving for some users",
+      "⚡ Performance improvements",
+      "🤖 Beta chat feature enabled",
+      "🐛 Bug fixes",
+    ],
+    note: "You'll be signed out to ensure all updates are applied correctly. Don't worry - all your data will be preserved!",
+  };
+
+  // Check if app version has changed and force refresh if needed
+  useEffect(() => {
+    const storedVersion = localStorage.getItem("appVersion");
+    if (storedVersion !== APP_VERSION) {
+      console.log(
+        "App version changed from",
+        storedVersion,
+        "to",
+        APP_VERSION,
+        "- showing changelog"
+      );
+
+      // Show changelog modal instead of immediately clearing
+      setShowChangelog(true);
+      return;
+    }
+  }, []);
+
+  const [showChangelog, setShowChangelog] = useState(false);
+
+  const handleChangelogContinue = () => {
+    setShowChangelog(false);
+
+    // Store essential user data before clearing
+    const timeEntries = localStorage.getItem("timeEntries");
+    const dailySubmissions = localStorage.getItem("dailySubmissions");
+    const payHistory = localStorage.getItem("payHistory");
+    const currentUserId = localStorage.getItem("currentUserId");
+    const settings = localStorage.getItem("settings");
+    const hourlyRate = localStorage.getItem("hourlyRate");
+    const activeView = localStorage.getItem("activeView");
+
+    // Clear localStorage but preserve user data
+    localStorage.clear();
+
+    // Restore essential user data
+    if (timeEntries) localStorage.setItem("timeEntries", timeEntries);
+    if (dailySubmissions)
+      localStorage.setItem("dailySubmissions", dailySubmissions);
+    if (payHistory) localStorage.setItem("payHistory", payHistory);
+    if (currentUserId) localStorage.setItem("currentUserId", currentUserId);
+    if (settings) localStorage.setItem("settings", settings);
+    if (hourlyRate) localStorage.setItem("hourlyRate", hourlyRate);
+    if (activeView) localStorage.setItem("activeView", activeView);
+
+    // Store new version
+    localStorage.setItem("appVersion", APP_VERSION);
+
+    // Force page reload to ensure fresh data
+    window.location.reload();
+  };
+
   const [activeView, setActiveView] = useLocalStorage<View>(
     "activeView",
     View.WORK
@@ -686,6 +755,67 @@ const App: React.FC = () => {
                       Got it
                     </button>
                   )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Changelog Modal */}
+          {showChangelog && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-2 sm:p-3">
+              <div
+                className={`w-full max-w-md rounded-xl shadow-2xl border ${
+                  settings.darkMode
+                    ? "bg-gray-800 border-gray-600 text-gray-100"
+                    : "bg-white border-gray-200 text-slate-800"
+                }`}
+              >
+                <div
+                  className={`px-4 py-4 border-b ${
+                    settings.darkMode ? "border-gray-600" : "border-gray-200"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-bold">{CHANGELOG.title}</h3>
+                    <div className="text-sm text-slate-500 dark:text-gray-400">
+                      v{CHANGELOG.version}
+                    </div>
+                  </div>
+                </div>
+                <div className="px-4 py-4 space-y-3">
+                  <div className="space-y-2">
+                    {CHANGELOG.changes.map((change, index) => (
+                      <div key={index} className="flex items-start gap-2">
+                        <span className="text-lg">•</span>
+                        <span className="text-sm">{change}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div
+                    className={`text-xs p-3 rounded-lg ${
+                      settings.darkMode
+                        ? "bg-gray-700/50 text-gray-200"
+                        : "bg-slate-100 text-slate-600"
+                    }`}
+                  >
+                    {CHANGELOG.note}
+                  </div>
+                </div>
+                <div
+                  className={`px-4 py-4 border-t flex justify-end ${
+                    settings.darkMode ? "border-gray-600" : "border-gray-200"
+                  }`}
+                >
+                  <button
+                    onClick={handleChangelogContinue}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      settings.darkMode
+                        ? "bg-blue-600 hover:bg-blue-700 text-white"
+                        : "bg-blue-600 hover:bg-blue-700 text-white"
+                    }`}
+                  >
+                    Continue & Update
+                  </button>
                 </div>
               </div>
             </div>
