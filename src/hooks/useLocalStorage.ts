@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 function useLocalStorage<T>(key: string, initialValue: T) {
   // Get from local storage then
@@ -41,7 +41,7 @@ function useLocalStorage<T>(key: string, initialValue: T) {
           key === "payHistory" ||
           key === "dailySubmissions"
         ) {
-          console.log(`[useLocalStorage] Saved ${key}:`, valueToStore);
+          // Debug logging removed
         }
       }
     } catch (error) {

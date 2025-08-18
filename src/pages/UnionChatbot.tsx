@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import useLocalStorage from "../hooks/useLocalStorage";
 import { getChatbotResponse } from "../services/geminiService";
 import { ChatMessage, Settings } from "../types";
 
@@ -48,28 +49,9 @@ const SafeTextRenderer: React.FC<{ text: string; darkMode?: boolean }> = ({
 }) => {
   const parts = detectUrls(text);
 
-  // Enhanced to detect resource references
-  const enhancedParts = parts.map((part) => {
-    if (part.type === "text") {
-      // Highlight resource references
-      const resourceRegex =
-        /(Big Red Book|TfL|Highway Code|Working Time Regulations|employment rights)/gi;
-      const resourceMatches = part.content.match(resourceRegex);
-
-      if (resourceMatches) {
-        return {
-          type: "resource" as const,
-          content: part.content,
-          resources: resourceMatches,
-        };
-      }
-    }
-    return part;
-  });
-
   return (
     <>
-      {enhancedParts.map((part, index) => {
+      {parts.map((part, index) => {
         if (part.type === "url" && part.url) {
           return (
             <a
@@ -87,15 +69,48 @@ const SafeTextRenderer: React.FC<{ text: string; darkMode?: boolean }> = ({
             </a>
           );
         }
-        if (part.type === "resource") {
-          return (
-            <span
-              key={index}
-              className="font-medium text-green-600 dark:text-green-400"
-            >
-              {part.content}
-            </span>
-          );
+        if (part.type === "text") {
+          // Split text and highlight only the resource names
+          const resourceRegex =
+            /(Big Red Book|TfL|Highway Code|Working Time Regulations|employment rights)/gi;
+          const textParts = [];
+          let lastIndex = 0;
+          let match;
+          let partIndex = 0;
+
+          while ((match = resourceRegex.exec(part.content)) !== null) {
+            // Add text before the resource
+            if (match.index > lastIndex) {
+              textParts.push(
+                <span key={`text-${index}-${partIndex++}`}>
+                  {part.content.slice(lastIndex, match.index)}
+                </span>
+              );
+            }
+
+            // Add the highlighted resource
+            textParts.push(
+              <span
+                key={`resource-${index}-${partIndex++}`}
+                className="font-medium text-green-600 dark:text-green-400"
+              >
+                {match[0]}
+              </span>
+            );
+
+            lastIndex = match.index + match[0].length;
+          }
+
+          // Add remaining text after the last resource
+          if (lastIndex < part.content.length) {
+            textParts.push(
+              <span key={`text-${index}-${partIndex++}`}>
+                {part.content.slice(lastIndex)}
+              </span>
+            );
+          }
+
+          return textParts;
         }
         return <span key={index}>{part.content}</span>;
       })}
@@ -108,12 +123,15 @@ interface UnionChatbotProps {
 }
 
 const UnionChatbot: React.FC<UnionChatbotProps> = ({ settings }) => {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      sender: "bot",
-      text: "Hello! I'm your AI ShiftPal. How can I help you today? You can ask me about your rights, pay, or union rules.\n\n⚠️ DISCLAIMER: This AI provides general information only and should not be considered legal advice. Always consult official sources, your union representative, or legal professionals for specific situations. Information may not reflect the most current regulations.",
-    },
-  ]);
+  const [messages, setMessages] = useLocalStorage<ChatMessage[]>(
+    "chatMessages",
+    [
+      {
+        sender: "bot",
+        text: "Hello! I'm your AI ShiftPal. How can I help you today? You can ask me about your rights, pay, or union rules.\n\n💡 TIP: Green text highlights official resources and regulations mentioned in responses (e.g., Big Red Book, TfL, Highway Code).\n\n⚠️ DISCLAIMER: This AI provides general information only and should not be considered legal advice. Always consult official sources, your union representative, or legal professionals for specific situations. Information may not reflect the most current regulations.",
+      },
+    ]
+  );
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [lastMessageTime, setLastMessageTime] = useState(0);
@@ -165,6 +183,21 @@ const UnionChatbot: React.FC<UnionChatbotProps> = ({ settings }) => {
     }
   };
 
+  const clearChat = () => {
+    if (
+      window.confirm(
+        "Are you sure you want to clear the chat history? This action cannot be undone."
+      )
+    ) {
+      setMessages([
+        {
+          sender: "bot",
+          text: "Hello! I'm your AI ShiftPal. How can I help you today? You can ask me about your rights, pay, or union rules.\n\n💡 TIP: Green text highlights official resources and regulations mentioned in responses (e.g., Big Red Book, TfL, Highway Code).\n\n⚠️ DISCLAIMER: This AI provides general information only and should not be considered legal advice. Always consult official sources, your union representative, or legal professionals for specific situations. Information may not reflect the most current regulations.",
+        },
+      ]);
+    }
+  };
+
   return (
     <div
       className={`h-full flex flex-col ${
@@ -172,6 +205,23 @@ const UnionChatbot: React.FC<UnionChatbotProps> = ({ settings }) => {
       }`}
     >
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        {/* Clear Chat Button - Only show when there are messages to clear */}
+        {messages.length > 1 && (
+          <div className="flex justify-center mb-4">
+            <button
+              onClick={clearChat}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                settings.darkMode
+                  ? "bg-gray-700 hover:bg-gray-600 text-gray-200"
+                  : "bg-gray-200 hover:bg-gray-300 text-gray-700"
+              }`}
+              title="Clear chat history"
+            >
+              🗑️ Clear Chat
+            </button>
+          </div>
+        )}
+
         {messages.map((msg, index) => (
           <div
             key={index}

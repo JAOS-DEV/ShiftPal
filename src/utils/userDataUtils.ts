@@ -259,7 +259,6 @@ export async function migrateToCloudStorage(userId: string): Promise<boolean> {
     // Write merged data to cloud
     await writeCloudSnapshot(userId, migrationData);
 
-    console.log("Successfully migrated and merged local data to cloud");
     return true;
   } catch (error) {
     console.error("Failed to migrate to cloud storage:", error);
@@ -283,6 +282,8 @@ export function saveUserData(userId: string): void {
     activeView: localStorage.getItem("activeView"),
     onboardingComplete: localStorage.getItem("onboardingComplete"),
     settings: localStorage.getItem("settings"),
+    // Chat messages
+    chatMessages: localStorage.getItem("chatMessages"),
     // Pay calculator input values
     useManualHours: localStorage.getItem("useManualHours"),
     manualHours: localStorage.getItem("manualHours"),
@@ -312,14 +313,13 @@ export function loadUserData(userId: string): void {
     try {
       const parsedData = JSON.parse(userData);
 
-      console.log(`Loading saved data for user ${userId}`);
-
       // Clear current data and restore from user-specific storage
       localStorage.removeItem("timeEntries");
       localStorage.removeItem("hourlyRate");
       localStorage.removeItem("payHistory");
       localStorage.removeItem("dailySubmissions");
       localStorage.removeItem("onboardingComplete");
+      localStorage.removeItem("chatMessages");
       // Clear pay calculator values
       localStorage.removeItem("useManualHours");
       localStorage.removeItem("manualHours");
@@ -354,6 +354,10 @@ export function loadUserData(userId: string): void {
       if (parsedData.settings)
         localStorage.setItem("settings", parsedData.settings);
       else localStorage.setItem("settings", JSON.stringify(defaultSettings));
+
+      // Restore chat messages
+      if (parsedData.chatMessages)
+        localStorage.setItem("chatMessages", parsedData.chatMessages);
 
       // Restore pay calculator values
       if (parsedData.useManualHours)
@@ -410,9 +414,6 @@ export function loadUserData(userId: string): void {
 
     if (currentUserId === userId) {
       // This user's data is already loaded - just keep it and save it for future
-      console.log(
-        `No saved data found for user ${userId} - preserving current data and saving for future`
-      );
 
       // Save current data to multi-user storage for future loads
       saveUserData(userId);
@@ -423,9 +424,6 @@ export function loadUserData(userId: string): void {
       }
     } else {
       // This is a different user - start with clean data
-      console.log(
-        `No saved data found for user ${userId} - starting with clean localStorage`
-      );
 
       // Clear current data for fresh start
       localStorage.removeItem("timeEntries");
@@ -434,6 +432,7 @@ export function loadUserData(userId: string): void {
       localStorage.removeItem("dailySubmissions");
       localStorage.removeItem("onboardingComplete");
       localStorage.removeItem("activeView");
+      localStorage.removeItem("chatMessages");
       // Clear pay calculator values
       localStorage.removeItem("useManualHours");
       localStorage.removeItem("manualHours");

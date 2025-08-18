@@ -1,6 +1,6 @@
 import {
+  addDoc,
   collection,
-  deleteDoc,
   deleteField,
   doc,
   getDoc,
@@ -9,9 +9,7 @@ import {
   setDoc,
   updateDoc,
   writeBatch,
-  addDoc,
 } from "firebase/firestore";
-import { db, auth } from "./firebase";
 import {
   DailyPay,
   DailySubmission,
@@ -20,6 +18,7 @@ import {
   UserProfile,
   UserRole,
 } from "../types";
+import { auth, db } from "./firebase";
 
 export type CloudSnapshot = {
   settings: Settings | null;
@@ -39,7 +38,6 @@ export async function readCloudSnapshot(uid: string): Promise<CloudSnapshot> {
     collection(rootRef, "dailySubmissions")
   );
   const payHistorySnap = await getDocs(collection(rootRef, "payHistory"));
-
   return {
     settings: (settingsSnap.data() as Settings) || null,
     timeEntries: timeEntriesSnap.docs.map((d) => d.data() as TimeEntry),
@@ -424,7 +422,6 @@ export async function initializeDefaultUserRole(): Promise<void> {
         createdByUid: auth.currentUser?.uid ?? null,
         createdByEmail: auth.currentUser?.email ?? null,
       });
-      console.log("Default user role initialized to 'beta'");
     }
   } catch (error) {
     console.error("Error initializing default user role:", error);

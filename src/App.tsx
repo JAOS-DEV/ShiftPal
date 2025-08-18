@@ -1,43 +1,43 @@
+import type { User } from "firebase/auth";
 import React, { useEffect, useRef, useState } from "react";
-import {
-  View,
-  Settings,
-  DailyPay,
-  TimeEntry,
-  DailySubmission,
-  UserProfile,
-} from "./types";
-import { WorkLog } from "./components/timeTracker";
-import UnionChatbot from "./pages/UnionChatbot";
-import SettingsComponent from "./pages/Settings";
-import PayCalculator from "./pages/PayCalculator";
 import { LawLimits } from "./components/payCalculator";
+import { WorkLog } from "./components/timeTracker";
 import BottomNav from "./components/ui/BottomNav";
 import ErrorBoundary from "./components/ui/ErrorBoundary";
-import AdminPanel from "./pages/AdminPanel";
 import useLocalStorage from "./hooks/useLocalStorage";
 import { useTimeCalculations } from "./hooks/useTimeCalculations";
+import AdminPanel from "./pages/AdminPanel";
 import LandingPage from "./pages/LandingPage";
+import PayCalculator from "./pages/PayCalculator";
+import SettingsComponent from "./pages/Settings";
+import UnionChatbot from "./pages/UnionChatbot";
 import { auth, onAuthStateChanged } from "./services/firebase";
 import {
-  getUserProfile,
   createUserProfile,
+  getUserProfile,
   isPro,
   updateLastLogin,
 } from "./services/firestoreStorage";
-import type { User } from "firebase/auth";
 import {
-  setCurrentUserId,
-  getCurrentUserId,
-  isDifferentUser,
-  ensureProFeaturesDisabled,
-  switchToUser,
-  saveUserData,
-  loadUserData,
-  getDefaultStorageMode,
+  DailyPay,
+  DailySubmission,
+  Settings,
+  TimeEntry,
+  UserProfile,
+  View,
+} from "./types";
+import {
   detectRoleChange,
-  migrateToCloudStorage,
+  ensureProFeaturesDisabled,
+  getCurrentUserId,
+  getDefaultStorageMode,
+  isDifferentUser,
+  loadUserData,
   mergeOfflineDataWithCloud,
+  migrateToCloudStorage,
+  saveUserData,
+  setCurrentUserId,
+  switchToUser,
 } from "./utils/userDataUtils";
 
 const App: React.FC = () => {
@@ -180,9 +180,6 @@ const App: React.FC = () => {
               defaultStorageMode === "cloud" &&
               !updatedSettings.storageModeSetExplicitly
             ) {
-              console.log(
-                "First-time pro user - enabling cloud storage by default"
-              );
               updatedSettings.storageMode = "cloud";
               updatedSettings.storageModeSetExplicitly = true;
 
@@ -195,9 +192,6 @@ const App: React.FC = () => {
                       firebaseUser.uid
                     );
                     if (migrationSuccess) {
-                      console.log(
-                        "Successfully migrated local data to cloud storage"
-                      );
                       // Update local state with merged data
                       setEntries(mergedData.timeEntries);
                       setDailySubmissions(mergedData.dailySubmissions);
@@ -208,9 +202,6 @@ const App: React.FC = () => {
                       );
                     }
                   } else {
-                    console.log(
-                      "No local changes to migrate - cloud data is current"
-                    );
                   }
                 })
                 .catch((error) => {
@@ -272,15 +263,9 @@ const App: React.FC = () => {
               if (roleChange === "upgrade") {
                 // User upgraded to pro - enable cloud storage and migrate data (if not explicitly set)
                 if (!updatedSettings.storageModeSetExplicitly) {
-                  console.log(
-                    "User role upgraded - enabling cloud storage by default"
-                  );
                   updatedSettings.storageMode = "cloud";
                   updatedSettings.storageModeSetExplicitly = true;
                 } else {
-                  console.log(
-                    "User role upgraded - respecting existing storage mode choice"
-                  );
                 }
 
                 // Only migrate if cloud storage is enabled
@@ -294,9 +279,6 @@ const App: React.FC = () => {
                           user.uid
                         );
                         if (migrationSuccess) {
-                          console.log(
-                            "Successfully migrated local data to cloud storage on role upgrade"
-                          );
                           // Update local state with merged data
                           setEntries(mergedData.timeEntries);
                           setDailySubmissions(mergedData.dailySubmissions);
@@ -307,9 +289,6 @@ const App: React.FC = () => {
                           );
                         }
                       } else {
-                        console.log(
-                          "No local changes to migrate on role upgrade - cloud data is current"
-                        );
                       }
                     })
                     .catch((error) => {
@@ -321,7 +300,7 @@ const App: React.FC = () => {
                 }
               } else if (roleChange === "downgrade") {
                 // User downgraded to free - disable pro features and force local storage
-                console.log("User role downgraded - disabling pro features");
+
                 updatedSettings = ensureProFeaturesDisabled(updatedSettings);
               } else if (!isPro(newProfile)) {
                 // User is not pro (could be a refresh, not necessarily a change)
@@ -411,7 +390,6 @@ const App: React.FC = () => {
 
     let timeoutId: number | undefined;
     const performMultiUserSave = () => {
-      console.log(`[Auto-save] Saving data for user ${user.uid}`);
       saveUserData(user.uid);
     };
 
