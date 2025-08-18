@@ -113,11 +113,20 @@ const SettingsTaxNI: React.FC<SettingsTaxNIProps> = ({
                 min="0"
                 max="100"
                 value={Math.round(settings.taxRate * 100) || ""}
-                onChange={(e) =>
-                  updateSettings({
-                    taxRate: parseAndRoundFloat(e.target.value) / 100,
-                  })
-                }
+                onChange={(e) => {
+                  const value = e.target.value;
+                  // Only update if it's a valid number or empty
+                  if (value === "" || !isNaN(parseFloat(value))) {
+                    updateSettings({
+                      taxRate: value === "" ? 0 : parseFloat(value) / 100,
+                    });
+                  }
+                }}
+                onBlur={(e) => {
+                  // Apply rounding only when input loses focus
+                  const value = parseAndRoundFloat(e.target.value) / 100;
+                  updateSettings({ taxRate: value });
+                }}
                 placeholder="e.g., 20"
                 disabled={!canUseTaxCalculations}
                 className={`w-full p-1 text-sm bg-transparent border rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600 ${

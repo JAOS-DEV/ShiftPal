@@ -83,8 +83,20 @@ const SettingsPayRates: React.FC<SettingsPayRatesProps> = ({
                   min="0"
                   value={rate.rate || ""}
                   onChange={(e) => {
+                    const value = e.target.value;
+                    // Only update if it's a valid number or empty
+                    if (value === "" || !isNaN(parseFloat(value))) {
+                      const newRates = [...(settings.standardRates || [])];
+                      newRates[index].rate =
+                        value === "" ? 0 : parseFloat(value);
+                      updateSettings({ standardRates: newRates });
+                    }
+                  }}
+                  onBlur={(e) => {
+                    // Apply rounding only when input loses focus
+                    const value = parseAndRoundFloat(e.target.value);
                     const newRates = [...(settings.standardRates || [])];
-                    newRates[index].rate = parseAndRoundFloat(e.target.value);
+                    newRates[index].rate = value;
                     updateSettings({ standardRates: newRates });
                   }}
                   className={`flex-1 p-0.5 text-xs bg-transparent border rounded focus:ring-1 focus:ring-gray-600 ${
@@ -208,8 +220,20 @@ const SettingsPayRates: React.FC<SettingsPayRatesProps> = ({
                   min="0"
                   value={rate.rate || ""}
                   onChange={(e) => {
+                    const value = e.target.value;
+                    // Only update if it's a valid number or empty
+                    if (value === "" || !isNaN(parseFloat(value))) {
+                      const newRates = [...(settings.overtimeRates || [])];
+                      newRates[index].rate =
+                        value === "" ? 0 : parseFloat(value);
+                      updateSettings({ overtimeRates: newRates });
+                    }
+                  }}
+                  onBlur={(e) => {
+                    // Apply rounding only when input loses focus
+                    const value = parseAndRoundFloat(e.target.value);
                     const newRates = [...(settings.overtimeRates || [])];
-                    newRates[index].rate = parseAndRoundFloat(e.target.value);
+                    newRates[index].rate = value;
                     updateSettings({ overtimeRates: newRates });
                   }}
                   className={`flex-1 p-0.5 text-xs bg-transparent border rounded focus:ring-1 focus:ring-gray-600 ${

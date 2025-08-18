@@ -3,6 +3,7 @@ import { TimeEntry, DailySubmission, Settings } from "../../types";
 import TimeTracker from "../../pages/TimeTracker";
 import { useTimeCalculations } from "../../hooks/useTimeCalculations";
 import useLocalStorage from "../../hooks/useLocalStorage";
+import { useActivityTracking } from "../../hooks/useActivityTracking";
 
 interface WorkLogProps {
   settings: Settings;
@@ -54,6 +55,7 @@ const WorkLog: React.FC<WorkLogProps> = ({
   const [hourlyRate, setHourlyRate] = useLocalStorage<number>("hourlyRate", 0);
   const [payHistory, setPayHistory] = useLocalStorage<any[]>("payHistory", []);
   const { totalDuration } = useTimeCalculations(entries);
+  const { updateActivity } = useActivityTracking();
 
   const addEntry = (startTime: string, endTime: string) => {
     const newEntry: TimeEntry = {
@@ -62,14 +64,17 @@ const WorkLog: React.FC<WorkLogProps> = ({
       endTime,
     };
     setEntries((prev) => [...prev, newEntry]);
+    updateActivity(); // Track activity when adding entries
   };
 
   const removeEntry = (id: number) => {
     setEntries((prev) => prev.filter((entry) => entry.id !== id));
+    updateActivity(); // Track activity when removing entries
   };
 
   const clearEntries = () => {
     setEntries([]);
+    updateActivity(); // Track activity when clearing entries
   };
 
   return (

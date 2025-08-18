@@ -19,6 +19,7 @@ import {
   PaySaveSuccessToast,
 } from "../components/payCalculator/index";
 import InfoModal from "../components/ui/InfoModal";
+import { useActivityTracking } from "../hooks/useActivityTracking";
 
 interface PayCalculatorProps {
   totalMinutes: number;
@@ -98,6 +99,7 @@ const PayCalculator: React.FC<PayCalculatorProps> = ({
 
   const containerRef = useRef<HTMLDivElement>(null);
   const inputSectionRef = useRef<HTMLDivElement>(null);
+  const { updateActivity } = useActivityTracking();
   const totalSectionRef = useRef<HTMLDivElement>(null);
 
   // Sync selected rate IDs with current rates and validate selections
@@ -275,6 +277,7 @@ const PayCalculator: React.FC<PayCalculatorProps> = ({
 
     setPayHistory([...payHistory, newPay]);
     setShowSaveSuccess(true);
+    updateActivity(); // Track activity when saving pay entries
 
     setTimeout(() => {
       setShowSaveSuccess(false);

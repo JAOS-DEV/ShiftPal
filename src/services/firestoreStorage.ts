@@ -148,30 +148,7 @@ export async function downloadCloudData(uid: string): Promise<void> {
   }
 }
 
-// One-time free recovery flag under users/{uid}/meta/limits
-export async function getFreeDownloadConsumed(uid: string): Promise<boolean> {
-  try {
-    const limitsDoc = await getDoc(doc(db, "users", uid, "meta", "limits"));
-    const consumed =
-      limitsDoc.exists() && (limitsDoc.data() as any).freeDownloadConsumed;
-    return Boolean(consumed);
-  } catch (e) {
-    console.warn("getFreeDownloadConsumed error", e);
-    return false;
-  }
-}
-
-export async function setFreeDownloadConsumed(uid: string): Promise<void> {
-  try {
-    await setDoc(
-      doc(db, "users", uid, "meta", "limits"),
-      { freeDownloadConsumed: true, freeDownloadAt: serverTimestamp() },
-      { merge: true }
-    );
-  } catch (e) {
-    console.warn("setFreeDownloadConsumed error", e);
-  }
-}
+// Ex-pro users can recover data unlimited times - no limits needed
 
 // User profile management
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
@@ -360,6 +337,14 @@ export async function updateLastLogin(uid: string): Promise<void> {
   const now = new Date().toISOString();
   await updateDoc(doc(db, "users", uid, "profile", "user"), {
     lastLoginAt: now,
+    updatedAt: now,
+  });
+}
+
+export async function updateLastActive(uid: string): Promise<void> {
+  const now = new Date().toISOString();
+  await updateDoc(doc(db, "users", uid, "profile", "user"), {
+    lastActiveAt: now,
     updatedAt: now,
   });
 }

@@ -73,6 +73,7 @@ export interface Settings {
   monthlyGoal: number;
   darkMode: boolean;
   storageMode: "local" | "cloud";
+  storageModeSetExplicitly?: boolean; // Track if user has explicitly chosen their storage mode
   lastSyncAt?: import("firebase/firestore").FieldValue | string;
 }
 
@@ -86,6 +87,7 @@ export interface UserProfile {
   createdAt: string;
   updatedAt: string;
   lastLoginAt?: string; // ISO date
+  lastActiveAt?: string; // ISO date - tracks when user last modified data
 }
 
 export interface ChatMessage {

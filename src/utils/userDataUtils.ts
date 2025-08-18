@@ -24,6 +24,7 @@ export const defaultSettings: Settings = {
   monthlyGoal: 0,
   darkMode: false,
   storageMode: "local",
+  storageModeSetExplicitly: false,
 };
 
 /**

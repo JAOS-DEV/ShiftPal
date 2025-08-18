@@ -198,9 +198,18 @@ const PayCalculatorInputs: React.FC<PayCalculatorInputsProps> = ({
               min="0"
               value={overtimeRate || ""}
               onChange={(e) => {
-                setOvertimeRate(parseAndRoundFloat(e.target.value));
-                // Clear dropdown selection when user manually edits
-                setSelectedOvertimeRateId("");
+                const value = e.target.value;
+                // Only update if it's a valid number or empty
+                if (value === "" || !isNaN(parseFloat(value))) {
+                  setOvertimeRate(value === "" ? 0 : parseFloat(value));
+                  // Clear dropdown selection when user manually edits
+                  setSelectedOvertimeRateId("");
+                }
+              }}
+              onBlur={(e) => {
+                // Apply rounding only when input loses focus
+                const value = parseAndRoundFloat(e.target.value);
+                setOvertimeRate(value);
               }}
               placeholder="e.g., 27.75"
               className={`flex-1 p-1 text-sm bg-transparent border rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600 min-w-0 ${

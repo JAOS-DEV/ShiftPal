@@ -43,11 +43,20 @@ const SettingsEarningGoals: React.FC<SettingsEarningGoalsProps> = ({
             step="0.01"
             min="0"
             value={settings.weeklyGoal || ""}
-            onChange={(e) =>
-              updateSettings({
-                weeklyGoal: parseAndRoundFloat(e.target.value),
-              })
-            }
+            onChange={(e) => {
+              const value = e.target.value;
+              // Only update if it's a valid number or empty
+              if (value === "" || !isNaN(parseFloat(value))) {
+                updateSettings({
+                  weeklyGoal: value === "" ? 0 : parseFloat(value),
+                });
+              }
+            }}
+            onBlur={(e) => {
+              // Apply rounding only when input loses focus
+              const value = parseAndRoundFloat(e.target.value);
+              updateSettings({ weeklyGoal: value });
+            }}
             placeholder="e.g., 800"
             className={`w-full p-1 text-sm bg-transparent border rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600 ${
               settings.darkMode
@@ -72,11 +81,20 @@ const SettingsEarningGoals: React.FC<SettingsEarningGoalsProps> = ({
             step="0.01"
             min="0"
             value={settings.monthlyGoal || ""}
-            onChange={(e) =>
-              updateSettings({
-                monthlyGoal: parseAndRoundFloat(e.target.value),
-              })
-            }
+            onChange={(e) => {
+              const value = e.target.value;
+              // Only update if it's a valid number or empty
+              if (value === "" || !isNaN(parseFloat(value))) {
+                updateSettings({
+                  monthlyGoal: value === "" ? 0 : parseFloat(value),
+                });
+              }
+            }}
+            onBlur={(e) => {
+              // Apply rounding only when input loses focus
+              const value = parseAndRoundFloat(e.target.value);
+              updateSettings({ monthlyGoal: value });
+            }}
             placeholder="e.g., 3200"
             className={`w-full p-1 text-sm bg-transparent border rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600 ${
               settings.darkMode

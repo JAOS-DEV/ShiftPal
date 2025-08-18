@@ -4,6 +4,7 @@ import type { User } from "firebase/auth";
 import { UserProfile } from "../types";
 import { ProVerificationUpgradeModal } from "../components/modals";
 import ToastNotification from "../components/ui/ToastNotification";
+import { useActivityTracking } from "../hooks/useActivityTracking";
 import {
   SettingsAccount,
   SettingsAppearance,
@@ -44,8 +45,11 @@ const Settings: React.FC<SettingsProps> = ({
     action: () => void;
   } | null>(null);
 
+  const { updateActivity } = useActivityTracking();
+
   const updateSettings = (updates: Partial<SettingsType>) => {
     setSettings({ ...settings, ...updates });
+    updateActivity(); // Track activity when settings are changed
   };
 
   const openUpgrade = (feature: string) => {

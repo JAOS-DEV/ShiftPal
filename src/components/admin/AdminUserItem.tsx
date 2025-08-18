@@ -1,6 +1,44 @@
 import React from "react";
 import { UserProfile, UserRole, Settings } from "../../types";
 
+// Helper function to format last active time
+const formatLastActive = (lastActiveAt: string) => {
+  const lastActive = new Date(lastActiveAt);
+  const now = new Date();
+  const diffMs = now.getTime() - lastActive.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  // If it's today, show just the time
+  if (diffDays === 0) {
+    return lastActive.toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  // If it's yesterday, show "Yesterday" + time
+  if (diffDays === 1) {
+    return `Yesterday ${lastActive.toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+    })}`;
+  }
+
+  // For older dates, show the full date and time
+  return (
+    lastActive.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "2-digit",
+    }) +
+    " " +
+    lastActive.toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+  );
+};
+
 interface AdminUserItemProps {
   userProfile: UserProfile;
   settings: Settings;
@@ -44,6 +82,12 @@ const AdminUserItem: React.FC<AdminUserItemProps> = ({
             <>
               <br />
               Last login: {new Date(userProfile.lastLoginAt).toLocaleString()}
+            </>
+          )}
+          {userProfile.lastActiveAt && (
+            <>
+              <br />
+              Last active: {formatLastActive(userProfile.lastActiveAt)}
             </>
           )}
         </div>

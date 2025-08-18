@@ -23,13 +23,8 @@ const SettingsCloudSync: React.FC<SettingsCloudSyncProps> = ({
   onToast,
 }) => {
   const [showCloudInfo, setShowCloudInfo] = useState(false);
-  const [showCloudSyncModal, setShowCloudSyncModal] = useState(false);
-  const [cloudSyncChoice, setCloudSyncChoice] = useState<
-    "download" | "upload" | null
-  >(null);
+  // Removed: modal-related state no longer needed with smart merging
   const [hasCloudData, setHasCloudData] = useState(false);
-  const [freeDownloadConsumedState, setFreeDownloadConsumedState] =
-    useState(false);
 
   // Pro status checks
   const userIsPro = isPro(userProfile);
@@ -52,20 +47,16 @@ const SettingsCloudSync: React.FC<SettingsCloudSyncProps> = ({
     }
   }, [settings.lastSyncAt]);
 
-  // For downgraded free users: allow one-time download if cloud data exists
+  // For downgraded free users: check if they have cloud data to recover
   useEffect(() => {
     const run = async () => {
       if (!user || userIsPro) return;
       try {
-        const { cloudDataExists, getFreeDownloadConsumed } = await import(
+        const { cloudDataExists } = await import(
           "../../services/firestoreStorage"
         );
-        const [exists, consumed] = await Promise.all([
-          cloudDataExists(user.uid),
-          getFreeDownloadConsumed(user.uid),
-        ]);
+        const exists = await cloudDataExists(user.uid);
         setHasCloudData(exists);
-        setFreeDownloadConsumedState(consumed);
       } catch (e) {
         // silent fail
       }
@@ -73,51 +64,7 @@ const SettingsCloudSync: React.FC<SettingsCloudSyncProps> = ({
     run();
   }, [user, userIsPro]);
 
-  // Handle cloud sync choice
-  const handleCloudSyncChoice = async (choice: "download" | "upload") => {
-    if (!user) return;
-
-    try {
-      if (choice === "download") {
-        // Download cloud data to local
-        const { downloadCloudData } = await import(
-          "../../services/firestoreStorage"
-        );
-        await downloadCloudData(user.uid);
-        const nowIso = new Date().toISOString();
-        updateSettings({
-          storageMode: "cloud",
-          lastSyncAt: nowIso,
-        });
-        onToast("Cloud sync enabled - using cloud data.");
-      } else {
-        // Upload local data to cloud
-        const local = {
-          settings: JSON.parse(localStorage.getItem("settings") || "null"),
-          timeEntries: JSON.parse(localStorage.getItem("timeEntries") || "[]"),
-          dailySubmissions: JSON.parse(
-            localStorage.getItem("dailySubmissions") || "[]"
-          ),
-          payHistory: JSON.parse(localStorage.getItem("payHistory") || "[]"),
-        };
-        const { writeCloudSnapshot } = await import(
-          "../../services/firestoreStorage"
-        );
-        await writeCloudSnapshot(user.uid, local);
-        const nowIso = new Date().toISOString();
-        updateSettings({
-          storageMode: "cloud",
-          lastSyncAt: nowIso,
-        });
-        onToast("Cloud sync enabled - uploaded local data.");
-      }
-    } catch (e) {
-      onToast("Failed to enable cloud sync. Please try again.");
-    } finally {
-      setShowCloudSyncModal(false);
-      setCloudSyncChoice(null);
-    }
-  };
+  // Removed: handleCloudSyncChoice function no longer needed with smart merging
 
   return (
     <>
@@ -184,73 +131,7 @@ const SettingsCloudSync: React.FC<SettingsCloudSyncProps> = ({
         </div>
       )}
 
-      {/* Cloud Sync Choice Modal */}
-      {showCloudSyncModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div
-            className={`w-full max-w-sm rounded-xl shadow-2xl border ${
-              settings.darkMode
-                ? "bg-gray-800 border-gray-600 text-gray-100"
-                : "bg-white border-gray-200 text-slate-800"
-            }`}
-          >
-            <div
-              className={`px-4 py-3 border-b ${
-                settings.darkMode ? "border-gray-600" : "border-gray-200"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <h3 className="text-base font-bold">Cloud Data Found</h3>
-                <button
-                  onClick={() => {
-                    setShowCloudSyncModal(false);
-                    setCloudSyncChoice(null);
-                  }}
-                  className={
-                    settings.darkMode
-                      ? "text-gray-400 hover:text-gray-200"
-                      : "text-slate-400 hover:text-slate-600"
-                  }
-                  aria-label="Close"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-            <div className="px-4 py-3 space-y-3 text-sm">
-              <p>We found existing cloud data. What would you like to do?</p>
-              <div className="space-y-2">
-                <button
-                  onClick={() => handleCloudSyncChoice("download")}
-                  className={`w-full p-3 rounded-lg border text-left transition-colors ${
-                    settings.darkMode
-                      ? "bg-gray-700 border-gray-600 hover:bg-gray-600"
-                      : "bg-slate-100 border-slate-300 hover:bg-slate-200"
-                  }`}
-                >
-                  <div className="font-medium">Use Cloud Data</div>
-                  <div className="text-xs opacity-75">
-                    Download cloud data to this device (recommended)
-                  </div>
-                </button>
-                <button
-                  onClick={() => handleCloudSyncChoice("upload")}
-                  className={`w-full p-3 rounded-lg border text-left transition-colors ${
-                    settings.darkMode
-                      ? "bg-gray-700 border-gray-600 hover:bg-gray-600"
-                      : "bg-slate-100 border-slate-300 hover:bg-slate-200"
-                  }`}
-                >
-                  <div className="font-medium">Upload Local Data</div>
-                  <div className="text-xs opacity-75">
-                    Replace cloud data with this device's data
-                  </div>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Removed: Cloud Sync Choice Modal - no longer needed with smart merging */}
 
       {/* Cloud Sync Section */}
       <div
@@ -341,34 +222,50 @@ const SettingsCloudSync: React.FC<SettingsCloudSyncProps> = ({
                 }
                 const switchingToCloud = settings.storageMode !== "cloud";
                 if (switchingToCloud) {
-                  // Check if cloud data exists first
-                  const { readCloudSnapshot } = await import(
-                    "../../services/firestoreStorage"
-                  );
+                  // Enable cloud sync with smart merging (no modal needed)
                   try {
-                    const cloudData = await readCloudSnapshot(user.uid);
-                    const hasCloudData =
-                      cloudData &&
-                      (cloudData.settings ||
-                        (cloudData.timeEntries &&
-                          cloudData.timeEntries.length > 0) ||
-                        (cloudData.dailySubmissions &&
-                          cloudData.dailySubmissions.length > 0) ||
-                        (cloudData.payHistory &&
-                          cloudData.payHistory.length > 0));
+                    // Import merging function and cloud write
+                    const { mergeOfflineDataWithCloud } = await import(
+                      "../../utils/userDataUtils"
+                    );
+                    const { writeCloudSnapshot } = await import(
+                      "../../services/firestoreStorage"
+                    );
 
-                    if (hasCloudData) {
-                      setCloudSyncChoice("download");
-                      setShowCloudSyncModal(true);
-                    } else {
-                      handleCloudSyncChoice("upload");
-                    }
+                    // Smart merge local and cloud data
+                    const mergedData = await mergeOfflineDataWithCloud(
+                      user.uid
+                    );
+
+                    // Write merged data back to cloud
+                    const dataToWrite = {
+                      settings: JSON.parse(
+                        localStorage.getItem("settings") || "{}"
+                      ),
+                      timeEntries: mergedData.timeEntries,
+                      dailySubmissions: mergedData.dailySubmissions,
+                      payHistory: mergedData.payHistory,
+                    };
+                    await writeCloudSnapshot(user.uid, dataToWrite);
+
+                    // Update settings to enable cloud mode
+                    const nowIso = new Date().toISOString();
+                    updateSettings({
+                      storageMode: "cloud",
+                      lastSyncAt: nowIso,
+                      storageModeSetExplicitly: true,
+                    });
+
+                    onToast("Cloud sync enabled - data merged successfully!");
                   } catch (e) {
                     onToast("Failed to enable cloud sync. Please try again.");
                     return;
                   }
                 } else {
-                  updateSettings({ storageMode: "local" });
+                  updateSettings({
+                    storageMode: "local",
+                    storageModeSetExplicitly: true,
+                  });
                 }
               }}
               aria-label="Toggle Cloud Sync"
@@ -388,138 +285,95 @@ const SettingsCloudSync: React.FC<SettingsCloudSyncProps> = ({
               />
             </button>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={() => {
-                if (!user) {
-                  onToast("Sign in first.");
-                  return;
-                }
-                if (!canUseCloudStorage) {
-                  openUpgrade("Cloud Sync");
-                  return;
-                }
-                // Upload local data to cloud (no confirmation needed for manual action)
-                const local = {
-                  settings: JSON.parse(
-                    localStorage.getItem("settings") || "null"
-                  ),
-                  timeEntries: JSON.parse(
-                    localStorage.getItem("timeEntries") || "[]"
-                  ),
-                  dailySubmissions: JSON.parse(
-                    localStorage.getItem("dailySubmissions") || "[]"
-                  ),
-                  payHistory: JSON.parse(
-                    localStorage.getItem("payHistory") || "[]"
-                  ),
-                };
-                import("../../services/firestoreStorage").then(async (m) => {
-                  await m.writeCloudSnapshot(user.uid, local);
-                  onToast("Synced to cloud.");
-                });
-              }}
-              aria-label="Upload this device's data to cloud"
-              title={
-                canUseCloudStorage
-                  ? "Upload this device's data to cloud"
-                  : "Pro required"
-              }
-              className={`w-full py-1 px-2 rounded border transition-colors text-xs ${
-                canUseCloudStorage
-                  ? settings.darkMode
-                    ? "bg-gray-700 text-gray-100 border-gray-600 hover:bg-gray-600"
-                    : "bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200"
-                  : settings.darkMode
-                  ? "bg-gray-800 text-gray-500 border-gray-700 cursor-not-allowed"
-                  : "bg-slate-100/80 text-slate-500 border-slate-300/60 cursor-not-allowed"
+          {/* Recovery section for ex-pro users */}
+          {!canUseCloudStorage && hasCloudData && (
+            <div
+              className={`mt-3 p-2 rounded-lg border ${
+                settings.darkMode
+                  ? "bg-gray-700/50 border-gray-600"
+                  : "bg-white/50 border-gray-200/80"
               }`}
             >
-              Upload this device's data to cloud
-            </button>
-            <button
-              onClick={() => {
-                if (!user) {
-                  onToast("Sign in first.");
-                  return;
-                }
-                const allowDownload =
-                  canUseCloudStorage ||
-                  (hasCloudData && !freeDownloadConsumedState);
-                if (!allowDownload) {
-                  openUpgrade("Cloud Sync");
-                  return;
-                }
-                // Download cloud data to local (no confirmation needed for manual action)
-                import("../../services/firestoreStorage").then(async (m) => {
-                  const snap = await m.readCloudSnapshot(user.uid);
-                  if (snap.settings)
-                    localStorage.setItem(
-                      "settings",
-                      JSON.stringify(snap.settings)
-                    );
-                  localStorage.setItem(
-                    "timeEntries",
-                    JSON.stringify(snap.timeEntries || [])
-                  );
-                  localStorage.setItem(
-                    "dailySubmissions",
-                    JSON.stringify(snap.dailySubmissions || [])
-                  );
-                  localStorage.setItem(
-                    "payHistory",
-                    JSON.stringify(snap.payHistory || [])
-                  );
+              <div className="flex items-start gap-2">
+                <div
+                  className={`text-sm ${
+                    settings.darkMode ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  ℹ️
+                </div>
+                <div className="flex-1">
+                  <h4
+                    className={`text-sm font-medium mb-1 ${
+                      settings.darkMode ? "text-gray-100" : "text-slate-700"
+                    }`}
+                  >
+                    Recover Your Data
+                  </h4>
+                  <p
+                    className={`text-xs mb-2 ${
+                      settings.darkMode ? "text-gray-400" : "text-slate-500"
+                    }`}
+                  >
+                    We found data from when you had pro features. You can
+                    recover it anytime.
+                  </p>
+                  <button
+                    onClick={() => {
+                      if (!user) {
+                        onToast("Sign in first.");
+                        return;
+                      }
+                      // Recovery download for ex-pro users (unlimited)
+                      import("../../services/firestoreStorage").then(
+                        async (m) => {
+                          try {
+                            const snap = await m.readCloudSnapshot(user.uid);
+                            if (snap.settings)
+                              localStorage.setItem(
+                                "settings",
+                                JSON.stringify(snap.settings)
+                              );
+                            localStorage.setItem(
+                              "timeEntries",
+                              JSON.stringify(snap.timeEntries || [])
+                            );
+                            localStorage.setItem(
+                              "dailySubmissions",
+                              JSON.stringify(snap.dailySubmissions || [])
+                            );
+                            localStorage.setItem(
+                              "payHistory",
+                              JSON.stringify(snap.payHistory || [])
+                            );
 
-                  if (
-                    !canUseCloudStorage &&
-                    hasCloudData &&
-                    !freeDownloadConsumedState
-                  ) {
-                    try {
-                      await m.setFreeDownloadConsumed(user.uid);
-                      setFreeDownloadConsumedState(true);
-                      updateSettings({
-                        storageMode: "local",
-                        enableTaxCalculations: false,
-                        enableNiCalculations: false,
-                      });
-                    } catch {}
-                  }
+                            updateSettings({
+                              storageMode: "local",
+                              enableTaxCalculations: false,
+                              enableNiCalculations: false,
+                            });
 
-                  onToast("Synced to local. Reloading…");
-                  setTimeout(() => window.location.reload(), 500);
-                });
-              }}
-              aria-label="Download cloud data to this device"
-              title={
-                canUseCloudStorage ||
-                (hasCloudData && !freeDownloadConsumedState)
-                  ? "Download cloud data to this device"
-                  : "Pro required"
-              }
-              className={`w-full py-1 px-2 rounded border transition-colors text-xs ${
-                canUseCloudStorage ||
-                (hasCloudData && !freeDownloadConsumedState)
-                  ? settings.darkMode
-                    ? "bg-gray-700 text-gray-100 border-gray-600 hover:bg-gray-600"
-                    : "bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200"
-                  : settings.darkMode
-                  ? "bg-gray-800 text-gray-500 border-gray-700 cursor-not-allowed"
-                  : "bg-slate-100/80 text-slate-500 border-slate-300/60 cursor-not-allowed"
-              }`}
-            >
-              Download cloud data to this device
-            </button>
-          </div>
-          <p
-            className={`text-[11px] ${
-              settings.darkMode ? "text-gray-400" : "text-slate-500"
-            }`}
-          >
-            • Upload replaces your cloud data with this device's data. •
-            Download replaces this device's data with what's in the cloud.
-          </p>
+                            onToast("Data recovered successfully! Reloading…");
+                            setTimeout(() => window.location.reload(), 500);
+                          } catch (error) {
+                            onToast("Recovery failed. Please try again.");
+                            console.error("Recovery error:", error);
+                          }
+                        }
+                      );
+                    }}
+                    className={`w-full py-1.5 px-3 rounded-md text-xs font-medium transition-colors ${
+                      settings.darkMode
+                        ? "bg-gray-600 text-gray-100 hover:bg-gray-500"
+                        : "bg-slate-800 text-white hover:bg-slate-700"
+                    }`}
+                  >
+                    Recover My Data
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </>

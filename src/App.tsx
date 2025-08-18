@@ -69,6 +69,7 @@ const App: React.FC = () => {
     monthlyGoal: 0,
     darkMode: false,
     storageMode: "local",
+    storageModeSetExplicitly: false,
   });
 
   // Onboarding (first run) - DISABLED FOR NOW
@@ -172,14 +173,18 @@ const App: React.FC = () => {
             // User is not pro - ensure pro features are disabled
             updatedSettings = ensureProFeaturesDisabled(updatedSettings);
           } else if (profile && isPro(profile)) {
-            // User is pro - ensure they have access to cloud storage
-            // If they're currently on local and this is their default (first time pro), upgrade them
+            // User is pro - handle cloud storage appropriately
+            // Only auto-enable cloud storage if user hasn't explicitly chosen their preference
             if (
               updatedSettings.storageMode === "local" &&
-              defaultStorageMode === "cloud"
+              defaultStorageMode === "cloud" &&
+              !updatedSettings.storageModeSetExplicitly
             ) {
-              console.log("User upgraded to pro - enabling cloud storage");
+              console.log(
+                "First-time pro user - enabling cloud storage by default"
+              );
               updatedSettings.storageMode = "cloud";
+              updatedSettings.storageModeSetExplicitly = true;
 
               // Merge offline data with cloud and migrate (async, non-blocking)
               mergeOfflineDataWithCloud(firebaseUser.uid)
@@ -265,43 +270,55 @@ const App: React.FC = () => {
               let updatedSettings = { ...currentSettings };
 
               if (roleChange === "upgrade") {
-                // User upgraded to pro - enable cloud storage and migrate data
-                console.log("User role upgraded - enabling cloud storage");
-                updatedSettings.storageMode = "cloud";
+                // User upgraded to pro - enable cloud storage and migrate data (if not explicitly set)
+                if (!updatedSettings.storageModeSetExplicitly) {
+                  console.log(
+                    "User role upgraded - enabling cloud storage by default"
+                  );
+                  updatedSettings.storageMode = "cloud";
+                  updatedSettings.storageModeSetExplicitly = true;
+                } else {
+                  console.log(
+                    "User role upgraded - respecting existing storage mode choice"
+                  );
+                }
 
-                // Merge offline data with cloud and migrate (async, non-blocking)
-                mergeOfflineDataWithCloud(user.uid)
-                  .then(async (mergedData) => {
-                    if (mergedData.hasLocalChanges) {
-                      // User has local changes, migrate them to cloud
-                      const migrationSuccess = await migrateToCloudStorage(
-                        user.uid
-                      );
-                      if (migrationSuccess) {
-                        console.log(
-                          "Successfully migrated local data to cloud storage on role upgrade"
+                // Only migrate if cloud storage is enabled
+                if (updatedSettings.storageMode === "cloud") {
+                  // Merge offline data with cloud and migrate (async, non-blocking)
+                  mergeOfflineDataWithCloud(user.uid)
+                    .then(async (mergedData) => {
+                      if (mergedData.hasLocalChanges) {
+                        // User has local changes, migrate them to cloud
+                        const migrationSuccess = await migrateToCloudStorage(
+                          user.uid
                         );
-                        // Update local state with merged data
-                        setEntries(mergedData.timeEntries);
-                        setDailySubmissions(mergedData.dailySubmissions);
-                        setPayHistory(mergedData.payHistory);
+                        if (migrationSuccess) {
+                          console.log(
+                            "Successfully migrated local data to cloud storage on role upgrade"
+                          );
+                          // Update local state with merged data
+                          setEntries(mergedData.timeEntries);
+                          setDailySubmissions(mergedData.dailySubmissions);
+                          setPayHistory(mergedData.payHistory);
+                        } else {
+                          console.warn(
+                            "Failed to migrate local data to cloud storage on role upgrade"
+                          );
+                        }
                       } else {
-                        console.warn(
-                          "Failed to migrate local data to cloud storage on role upgrade"
+                        console.log(
+                          "No local changes to migrate on role upgrade - cloud data is current"
                         );
                       }
-                    } else {
-                      console.log(
-                        "No local changes to migrate on role upgrade - cloud data is current"
+                    })
+                    .catch((error) => {
+                      console.error(
+                        "Failed to merge offline data on role upgrade:",
+                        error
                       );
-                    }
-                  })
-                  .catch((error) => {
-                    console.error(
-                      "Failed to merge offline data on role upgrade:",
-                      error
-                    );
-                  });
+                    });
+                }
               } else if (roleChange === "downgrade") {
                 // User downgraded to free - disable pro features and force local storage
                 console.log("User role downgraded - disabling pro features");
