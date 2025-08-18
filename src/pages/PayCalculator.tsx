@@ -1,25 +1,21 @@
-import React, { useState, useEffect, useRef } from "react";
-import useLocalStorage from "../hooks/useLocalStorage";
-import {
-  decimalHoursToDuration,
-  formatDurationWithMinutes,
-} from "../utils/timeUtils";
-import { formatCurrency } from "../utils/formatUtils";
-import { DailyPay, Settings, DailySubmission, UserProfile } from "../types";
-import PayHistory from "./PayHistory";
-import { isPro } from "../services/firestoreStorage";
+import React, { useEffect, useRef, useState } from "react";
 import { ProVerificationUpgradeModal } from "../components/modals";
 import {
-  PayCalculatorTabs,
   CalculationMethodToggle,
-  PayCalculatorInputs,
-  TotalPayDisplay,
-  PayCalculatorSaveSection,
   PayBreakdownModal,
+  PayCalculatorInputs,
+  PayCalculatorSaveSection,
+  PayCalculatorTabs,
   PaySaveSuccessToast,
+  TotalPayDisplay,
 } from "../components/payCalculator/index";
 import InfoModal from "../components/ui/InfoModal";
 import { useActivityTracking } from "../hooks/useActivityTracking";
+import useLocalStorage from "../hooks/useLocalStorage";
+import { isPro } from "../services/firestoreStorage";
+import { DailyPay, DailySubmission, Settings, UserProfile } from "../types";
+import { formatCurrency } from "../utils/formatUtils";
+import PayHistory from "./PayHistory";
 
 interface PayCalculatorProps {
   totalMinutes: number;
@@ -49,7 +45,7 @@ const PayCalculator: React.FC<PayCalculatorProps> = ({
   );
   const [useManualHours, setUseManualHours] = useLocalStorage<boolean>(
     "useManualHours",
-    false
+    true
   );
   const [manualHours, setManualHours] = useLocalStorage<number>(
     "manualHours",
