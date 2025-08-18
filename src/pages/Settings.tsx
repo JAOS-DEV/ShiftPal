@@ -1,21 +1,20 @@
-import React, { useState, useEffect } from "react";
-import { Settings as SettingsType } from "../types";
 import type { User } from "firebase/auth";
-import { UserProfile } from "../types";
+import React, { useEffect, useState } from "react";
 import { ProVerificationUpgradeModal } from "../components/modals";
-import ToastNotification from "../components/ui/ToastNotification";
-import { useActivityTracking } from "../hooks/useActivityTracking";
 import {
   SettingsAccount,
   SettingsAppearance,
-  SettingsWeekConfig,
-  SettingsPayRates,
-  SettingsTaxNI,
-  SettingsEarningGoals,
+  SettingsAppInfo,
   SettingsCloudSync,
   SettingsDataManagement,
-  SettingsAppInfo,
+  SettingsEarningGoals,
+  SettingsPayRates,
+  SettingsTaxNI,
+  SettingsWeekConfig,
 } from "../components/settings/index";
+import ToastNotification from "../components/ui/ToastNotification";
+import { useActivityTracking } from "../hooks/useActivityTracking";
+import { Settings as SettingsType, UserProfile } from "../types";
 
 interface SettingsProps {
   settings: SettingsType;

@@ -1,7 +1,6 @@
-import React from "react";
-import { Settings as SettingsType } from "../../types";
 import type { User } from "firebase/auth";
-import { UserProfile } from "../../types";
+import React from "react";
+import { Settings as SettingsType, UserProfile } from "../../types";
 
 interface SettingsAppInfoProps {
   settings: SettingsType;
@@ -16,30 +15,6 @@ const SettingsAppInfo: React.FC<SettingsAppInfoProps> = ({
 }) => {
   return (
     <>
-      {/* App Info */}
-      <div
-        className={`p-2 rounded-lg border ${
-          settings.darkMode
-            ? "bg-gray-700/50 border-gray-600"
-            : "bg-white/50 border-gray-200/80"
-        }`}
-      >
-        <h3
-          className={`text-sm font-bold mb-2 ${
-            settings.darkMode ? "text-gray-100" : "text-slate-700"
-          }`}
-        >
-          About ShiftPal
-        </h3>
-        <div
-          className={`space-y-1.5 text-xs ${
-            settings.darkMode ? "text-gray-400" : "text-slate-600"
-          }`}
-        >
-          <p>Beta version 1.0.0</p>
-        </div>
-      </div>
-
       {/* Support / Contact */}
       <div
         className={`p-2 rounded-lg border ${
@@ -100,6 +75,30 @@ const SettingsAppInfo: React.FC<SettingsAppInfoProps> = ({
         >
           We'll reply as soon as possible.
         </p>
+      </div>
+
+      {/* App Info */}
+      <div
+        className={`p-2 rounded-lg border ${
+          settings.darkMode
+            ? "bg-gray-700/50 border-gray-600"
+            : "bg-white/50 border-gray-200/80"
+        }`}
+      >
+        <h3
+          className={`text-sm font-bold mb-2 ${
+            settings.darkMode ? "text-gray-100" : "text-slate-700"
+          }`}
+        >
+          About ShiftPal
+        </h3>
+        <div
+          className={`space-y-1.5 text-xs ${
+            settings.darkMode ? "text-gray-400" : "text-slate-600"
+          }`}
+        >
+          <p>Beta version 2.0.0</p>
+        </div>
       </div>
     </>
   );
