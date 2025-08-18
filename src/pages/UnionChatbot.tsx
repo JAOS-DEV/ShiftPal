@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import useLocalStorage from "../hooks/useLocalStorage";
 import { getChatbotResponse } from "../services/geminiService";
 import { ChatMessage, Settings } from "../types";
 
@@ -123,15 +122,28 @@ interface UnionChatbotProps {
 }
 
 const UnionChatbot: React.FC<UnionChatbotProps> = ({ settings }) => {
-  const [messages, setMessages] = useLocalStorage<ChatMessage[]>(
-    "chatMessages",
-    [
+  // Custom chat state management to avoid useLocalStorage issues
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    // Load from localStorage on component mount
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("chatMessages");
+        if (stored) {
+          return JSON.parse(stored);
+        }
+      } catch (error) {
+        console.warn("Failed to load chat messages from localStorage:", error);
+      }
+    }
+
+    // Return default welcome message
+    return [
       {
         sender: "bot",
         text: "Hello! I'm your AI ShiftPal. How can I help you today? You can ask me about your rights, pay, or union rules.\n\n💡 TIP: Green text highlights official resources and regulations mentioned in responses (e.g., Big Red Book, TfL, Highway Code).\n\n⚠️ DISCLAIMER: This AI provides general information only and should not be considered legal advice. Always consult official sources, your union representative, or legal professionals for specific situations. Information may not reflect the most current regulations.",
       },
-    ]
-  );
+    ];
+  });
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [lastMessageTime, setLastMessageTime] = useState(0);
@@ -144,6 +156,17 @@ const UnionChatbot: React.FC<UnionChatbotProps> = ({ settings }) => {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isLoading]);
+
+  // Custom function to save messages to localStorage
+  const saveMessagesToStorage = (newMessages: ChatMessage[]) => {
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("chatMessages", JSON.stringify(newMessages));
+      } catch (error) {
+        console.warn("Failed to save chat messages to localStorage:", error);
+      }
+    }
+  };
 
   // Input sanitization function
   const sanitizeInput = (input: string): string => {
@@ -163,21 +186,43 @@ const UnionChatbot: React.FC<UnionChatbotProps> = ({ settings }) => {
 
     const sanitizedInput = sanitizeInput(inputValue);
     const userMessage: ChatMessage = { sender: "user", text: sanitizedInput };
-    setMessages((prev) => [...prev, userMessage]);
+
+    // Add user message to chat immediately and save to storage
+    setMessages((prev) => {
+      const newMessages = [...prev, userMessage];
+      saveMessagesToStorage(newMessages);
+      return newMessages;
+    });
+
     setInputValue("");
     setIsLoading(true);
     setLastMessageTime(now);
 
     try {
-      const responseText = await getChatbotResponse(messages, inputValue);
+      // Get the current messages including the user message we just added
+      const currentMessages = [...messages, userMessage];
+
+      const responseText = await getChatbotResponse(
+        currentMessages,
+        sanitizedInput
+      );
+
       const botMessage: ChatMessage = { sender: "bot", text: responseText };
-      setMessages((prev) => [...prev, botMessage]);
+      setMessages((prev) => {
+        const newMessages = [...prev, botMessage];
+        saveMessagesToStorage(newMessages);
+        return newMessages;
+      });
     } catch (error) {
       const errorMessage: ChatMessage = {
         sender: "bot",
         text: "Sorry, I am having trouble connecting. Please try again later.",
       };
-      setMessages((prev) => [...prev, errorMessage]);
+      setMessages((prev) => {
+        const newMessages = [...prev, errorMessage];
+        saveMessagesToStorage(newMessages);
+        return newMessages;
+      });
     } finally {
       setIsLoading(false);
     }
@@ -189,12 +234,14 @@ const UnionChatbot: React.FC<UnionChatbotProps> = ({ settings }) => {
         "Are you sure you want to clear the chat history? This action cannot be undone."
       )
     ) {
-      setMessages([
+      const defaultMessage: ChatMessage[] = [
         {
-          sender: "bot",
+          sender: "bot" as const,
           text: "Hello! I'm your AI ShiftPal. How can I help you today? You can ask me about your rights, pay, or union rules.\n\n💡 TIP: Green text highlights official resources and regulations mentioned in responses (e.g., Big Red Book, TfL, Highway Code).\n\n⚠️ DISCLAIMER: This AI provides general information only and should not be considered legal advice. Always consult official sources, your union representative, or legal professionals for specific situations. Information may not reflect the most current regulations.",
         },
-      ]);
+      ];
+      setMessages(defaultMessage);
+      saveMessagesToStorage(defaultMessage);
     }
   };
 
@@ -204,10 +251,16 @@ const UnionChatbot: React.FC<UnionChatbotProps> = ({ settings }) => {
         settings.darkMode ? "bg-gray-800" : "bg-[#FAF7F0]"
       }`}
     >
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {/* Clear Chat Button - Only show when there are messages to clear */}
-        {messages.length > 1 && (
-          <div className="flex justify-center mb-4">
+      {/* Fixed Clear Chat Button - Always visible when there are messages to clear */}
+      {messages.length > 1 && (
+        <div
+          className={`sticky top-0 z-10 p-3 border-b ${
+            settings.darkMode
+              ? "bg-gray-800 border-gray-600"
+              : "bg-[#FAF7F0] border-slate-200"
+          }`}
+        >
+          <div className="flex justify-center">
             <button
               onClick={clearChat}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -220,8 +273,10 @@ const UnionChatbot: React.FC<UnionChatbotProps> = ({ settings }) => {
               🗑️ Clear Chat
             </button>
           </div>
-        )}
+        </div>
+      )}
 
+      <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.map((msg, index) => (
           <div
             key={index}
