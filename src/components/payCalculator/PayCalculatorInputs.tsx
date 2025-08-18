@@ -84,7 +84,7 @@ const PayCalculatorInputs: React.FC<PayCalculatorInputsProps> = ({
                   setSelectedStandardRateId("");
                 }
               }}
-              placeholder="e.g., 18.50"
+              placeholder="18.50"
               className={`flex-1 mt-1 p-1 text-sm bg-transparent border rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600 min-w-0 ${
                 settings.darkMode
                   ? "border-gray-600 text-gray-100 placeholder-gray-400"
@@ -223,7 +223,7 @@ const PayCalculatorInputs: React.FC<PayCalculatorInputsProps> = ({
                 const value = parseAndRoundFloat(e.target.value);
                 setOvertimeRate(value);
               }}
-              placeholder="e.g., 27.75"
+              placeholder="27.75"
               className={`flex-1 p-1 text-sm bg-transparent border rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600 min-w-0 ${
                 settings.darkMode
                   ? "border-gray-600 text-gray-100 placeholder-gray-400"
