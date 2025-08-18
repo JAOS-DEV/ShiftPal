@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from "react";
-import { ChatMessage, Settings } from "../types";
+import React, { useEffect, useRef, useState } from "react";
 import { getChatbotResponse } from "../services/geminiService";
+import { ChatMessage, Settings } from "../types";
 
 // Utility function to detect URLs in text
 const detectUrls = (
@@ -48,9 +48,28 @@ const SafeTextRenderer: React.FC<{ text: string; darkMode?: boolean }> = ({
 }) => {
   const parts = detectUrls(text);
 
+  // Enhanced to detect resource references
+  const enhancedParts = parts.map((part) => {
+    if (part.type === "text") {
+      // Highlight resource references
+      const resourceRegex =
+        /(Big Red Book|TfL|Highway Code|Working Time Regulations|employment rights)/gi;
+      const resourceMatches = part.content.match(resourceRegex);
+
+      if (resourceMatches) {
+        return {
+          type: "resource" as const,
+          content: part.content,
+          resources: resourceMatches,
+        };
+      }
+    }
+    return part;
+  });
+
   return (
     <>
-      {parts.map((part, index) => {
+      {enhancedParts.map((part, index) => {
         if (part.type === "url" && part.url) {
           return (
             <a
@@ -68,6 +87,16 @@ const SafeTextRenderer: React.FC<{ text: string; darkMode?: boolean }> = ({
             </a>
           );
         }
+        if (part.type === "resource") {
+          return (
+            <span
+              key={index}
+              className="font-medium text-green-600 dark:text-green-400"
+            >
+              {part.content}
+            </span>
+          );
+        }
         return <span key={index}>{part.content}</span>;
       })}
     </>
@@ -82,7 +111,7 @@ const UnionChatbot: React.FC<UnionChatbotProps> = ({ settings }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       sender: "bot",
-      text: "Hello! I'm your AI ShiftPal. How can I help you today? You can ask me about your rights, pay, or union rules.\n\nThis feature is under development. \n\nPlease use this link instead: https://chatgpt.com/share/687faad1-2418-800c-b27d-82902187f69e",
+      text: "Hello! I'm your AI ShiftPal. How can I help you today? You can ask me about your rights, pay, or union rules.\n\n⚠️ DISCLAIMER: This AI provides general information only and should not be considered legal advice. Always consult official sources, your union representative, or legal professionals for specific situations. Information may not reflect the most current regulations.",
     },
   ]);
   const [inputValue, setInputValue] = useState("");
@@ -217,7 +246,7 @@ const UnionChatbot: React.FC<UnionChatbotProps> = ({ settings }) => {
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Ask about your rights..."
+            placeholder="Ask about your rights, union rules, or driving laws..."
             className={`flex-1 p-2.5 border rounded-full focus:ring-2 focus:ring-gray-600 focus:border-gray-600 outline-none text-sm ${
               settings.darkMode
                 ? "bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400"
@@ -236,15 +265,11 @@ const UnionChatbot: React.FC<UnionChatbotProps> = ({ settings }) => {
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
+              viewBox="0 0 24 24"
               fill="currentColor"
               className="w-4 h-4"
             >
-              <path
-                d="M3.105 3.105a.75.75 0 011.06 0L10 8.94l5.835-5.836a.75.75 0 111.06 1.06L11.06 10l5.835 5.835a.75.75 0 11-1.06 1.06L10 11.06l-5.835 5.835a.75.75 0 01-1.06-1.06L8.94 10 3.105 4.165a.75.75 0 010-1.06z"
-                clipRule="evenodd"
-                transform="rotate(45 10 10) scale(0.9) translate(2, 0)"
-              />
+              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
             </svg>
           </button>
         </form>
