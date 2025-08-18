@@ -1,8 +1,7 @@
 import React, { useState } from "react";
-import { Settings as SettingsType } from "../../types";
 import { isPro } from "../../services/firestoreStorage";
+import { Settings as SettingsType, UserProfile } from "../../types";
 import { parseAndRoundFloat } from "../../utils/formatUtils";
-import { UserProfile } from "../../types";
 import ProBadge from "./ProBadge";
 
 interface SettingsTaxNIProps {
@@ -127,7 +126,7 @@ const SettingsTaxNI: React.FC<SettingsTaxNIProps> = ({
                   const value = parseAndRoundFloat(e.target.value) / 100;
                   updateSettings({ taxRate: value });
                 }}
-                placeholder="e.g., 20"
+                placeholder="20"
                 disabled={!canUseTaxCalculations}
                 className={`w-full p-1 text-sm bg-transparent border rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600 ${
                   settings.darkMode

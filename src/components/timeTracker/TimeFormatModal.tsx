@@ -1,5 +1,5 @@
 import React from "react";
-import { Settings } from "../types";
+import { Settings } from "../../types";
 
 interface TimeFormatModalProps {
   visible: boolean;

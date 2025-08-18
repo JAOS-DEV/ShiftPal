@@ -57,7 +57,7 @@ const SettingsEarningGoals: React.FC<SettingsEarningGoalsProps> = ({
               const value = parseAndRoundFloat(e.target.value);
               updateSettings({ weeklyGoal: value });
             }}
-            placeholder="e.g., 800"
+            placeholder="800"
             className={`w-full p-1 text-sm bg-transparent border rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600 ${
               settings.darkMode
                 ? "border-gray-600 text-gray-100 placeholder-gray-400"
@@ -95,7 +95,7 @@ const SettingsEarningGoals: React.FC<SettingsEarningGoalsProps> = ({
               const value = parseAndRoundFloat(e.target.value);
               updateSettings({ monthlyGoal: value });
             }}
-            placeholder="e.g., 3200"
+            placeholder="3200"
             className={`w-full p-1 text-sm bg-transparent border rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600 ${
               settings.darkMode
                 ? "border-gray-600 text-gray-100 placeholder-gray-400"
