@@ -293,6 +293,8 @@ export function saveUserData(userId: string): void {
     payDate: localStorage.getItem("payDate"),
     selectedStandardRateId: localStorage.getItem("selectedStandardRateId"),
     selectedOvertimeRateId: localStorage.getItem("selectedOvertimeRateId"),
+    // Time tracker date
+    submitDate: localStorage.getItem("submitDate"),
   };
 
   // Save with user-specific keys
@@ -378,6 +380,8 @@ export function loadUserData(userId: string): void {
           "selectedOvertimeRateId",
           parsedData.selectedOvertimeRateId
         );
+      if (parsedData.submitDate)
+        localStorage.setItem("submitDate", parsedData.submitDate);
 
       // Dispatch custom event to notify components that data has been loaded
       window.dispatchEvent(
@@ -440,6 +444,7 @@ export function loadUserData(userId: string): void {
       localStorage.removeItem("payDate");
       localStorage.removeItem("selectedStandardRateId");
       localStorage.removeItem("selectedOvertimeRateId");
+      localStorage.removeItem("submitDate");
 
       // Set default settings
       localStorage.setItem("settings", JSON.stringify(defaultSettings));

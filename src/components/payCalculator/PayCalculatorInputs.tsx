@@ -76,9 +76,13 @@ const PayCalculatorInputs: React.FC<PayCalculatorInputsProps> = ({
               min="0"
               value={hourlyRate || ""}
               onChange={(e) => {
-                setHourlyRate(parseFloat(e.target.value) || 0);
-                // Clear dropdown selection when user manually edits
-                setSelectedStandardRateId("");
+                const value = e.target.value;
+                // Only update if it's a valid number or empty
+                if (value === "" || !isNaN(parseFloat(value))) {
+                  setHourlyRate(value === "" ? 0 : parseFloat(value));
+                  // Clear dropdown selection when user manually edits
+                  setSelectedStandardRateId("");
+                }
               }}
               placeholder="e.g., 18.50"
               className={`flex-1 mt-1 p-1 text-sm bg-transparent border rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600 min-w-0 ${
@@ -143,7 +147,11 @@ const PayCalculatorInputs: React.FC<PayCalculatorInputsProps> = ({
                 min="0"
                 value={manualHours || ""}
                 onChange={(e) => {
-                  setManualHours(parseInt(e.target.value) || 0);
+                  const value = e.target.value;
+                  // Only update if it's a valid number or empty
+                  if (value === "" || !isNaN(parseInt(value))) {
+                    setManualHours(value === "" ? 0 : parseInt(value));
+                  }
                 }}
                 placeholder="Hours"
                 className={`mt-1 w-full p-1 text-sm bg-transparent border rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600 ${
@@ -159,7 +167,11 @@ const PayCalculatorInputs: React.FC<PayCalculatorInputsProps> = ({
                 max="59"
                 value={manualMinutes || ""}
                 onChange={(e) => {
-                  setManualMinutes(parseInt(e.target.value) || 0);
+                  const value = e.target.value;
+                  // Only update if it's a valid number or empty
+                  if (value === "" || !isNaN(parseInt(value))) {
+                    setManualMinutes(value === "" ? 0 : parseInt(value));
+                  }
                 }}
                 placeholder="Minutes"
                 className={`mt-1 w-full p-1 text-sm bg-transparent border rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600 ${
@@ -271,7 +283,11 @@ const PayCalculatorInputs: React.FC<PayCalculatorInputsProps> = ({
               min="0"
               value={overtimeHours || ""}
               onChange={(e) => {
-                setOvertimeHours(parseInt(e.target.value) || 0);
+                const value = e.target.value;
+                // Only update if it's a valid number or empty
+                if (value === "" || !isNaN(parseInt(value))) {
+                  setOvertimeHours(value === "" ? 0 : parseInt(value));
+                }
               }}
               placeholder="Hours"
               className={`w-full p-1 text-sm bg-transparent border rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600 ${
@@ -287,7 +303,11 @@ const PayCalculatorInputs: React.FC<PayCalculatorInputsProps> = ({
               max="59"
               value={overtimeMinutes || ""}
               onChange={(e) => {
-                setOvertimeMinutes(parseInt(e.target.value) || 0);
+                const value = e.target.value;
+                // Only update if it's a valid number or empty
+                if (value === "" || !isNaN(parseInt(value))) {
+                  setOvertimeMinutes(value === "" ? 0 : parseInt(value));
+                }
               }}
               placeholder="Minutes"
               className={`w-full p-1 text-sm bg-transparent border rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600 ${

@@ -27,6 +27,7 @@ interface PayBreakdownModalProps {
   overtimeEarnings: number;
   totalEarnings: number;
   proTaxEnabled: boolean;
+  proNiEnabled: boolean;
   taxAmount: number;
   niAmount: number;
   settings: Settings;
@@ -46,6 +47,7 @@ const PayBreakdownModal: React.FC<PayBreakdownModalProps> = ({
   overtimeEarnings,
   totalEarnings,
   proTaxEnabled,
+  proNiEnabled,
   taxAmount,
   niAmount,
   settings,
@@ -245,7 +247,7 @@ const PayBreakdownModal: React.FC<PayBreakdownModalProps> = ({
           )}
 
           {/* NI Section - only show if NI calculations are enabled */}
-          {proTaxEnabled && niAmount > 0 && (
+          {proNiEnabled && niAmount > 0 && (
             <div className="pt-2 border-t border-orange-200 mt-2">
               <div className="flex justify-between items-center mb-1">
                 <span className="text-sm text-orange-600">NI (12%/2%)</span>
@@ -276,7 +278,7 @@ const PayBreakdownModal: React.FC<PayBreakdownModalProps> = ({
                 }`}
               >
                 {formatCurrency(
-                  proTaxEnabled
+                  proTaxEnabled || proNiEnabled
                     ? totalEarnings - taxAmount - niAmount
                     : totalEarnings
                 )}

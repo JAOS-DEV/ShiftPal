@@ -200,22 +200,35 @@ const PayCalculator: React.FC<PayCalculatorProps> = ({
     totalMinutes: overtimeHours * 60 + overtimeMinutes,
   };
 
-  // Calculate earnings breakdown
-  const standardEarnings = (duration.totalMinutes / 60) * hourlyRate;
+  // Calculate earnings breakdown with safety checks
+  const standardEarnings =
+    (isNaN(duration.totalMinutes) ? 0 : duration.totalMinutes / 60) *
+    (isNaN(hourlyRate) ? 0 : hourlyRate);
   const overtimeEarnings =
-    (overtimeDuration.totalMinutes / 60) * (overtimeRate || hourlyRate);
-  const totalEarnings = standardEarnings + overtimeEarnings;
+    (isNaN(overtimeDuration.totalMinutes)
+      ? 0
+      : overtimeDuration.totalMinutes / 60) *
+    (isNaN(overtimeRate) ? (isNaN(hourlyRate) ? 0 : hourlyRate) : overtimeRate);
+  const totalEarnings =
+    (isNaN(standardEarnings) ? 0 : standardEarnings) +
+    (isNaN(overtimeEarnings) ? 0 : overtimeEarnings);
 
-  // Tax calculations
+  // Tax calculations with safety checks
   const proTaxEnabled =
     isPro(userProfile || null) && settings.enableTaxCalculations;
-  const taxAmount = proTaxEnabled ? totalEarnings * settings.taxRate : 0;
-  const afterTaxEarnings = totalEarnings - taxAmount;
+  const proNiEnabled =
+    isPro(userProfile || null) && settings.enableNiCalculations;
+  const taxAmount =
+    proTaxEnabled && !isNaN(totalEarnings) && !isNaN(settings.taxRate)
+      ? totalEarnings * settings.taxRate
+      : 0;
+  const afterTaxEarnings =
+    (isNaN(totalEarnings) ? 0 : totalEarnings) -
+    (isNaN(taxAmount) ? 0 : taxAmount);
 
   // NI calculations (UK National Insurance)
   const calculateNI = (earnings: number): number => {
-    if (!(isPro(userProfile || null) && settings.enableNiCalculations))
-      return 0;
+    if (!proNiEnabled) return 0;
 
     // For daily pay calculations, use a more realistic daily threshold
     // Using a lower threshold that makes sense for daily work
@@ -230,8 +243,10 @@ const PayCalculator: React.FC<PayCalculatorProps> = ({
     return niAmount;
   };
 
-  const niAmount = calculateNI(totalEarnings);
-  const afterNiEarnings = totalEarnings - niAmount;
+  const niAmount = calculateNI(isNaN(totalEarnings) ? 0 : totalEarnings);
+  const afterNiEarnings =
+    (isNaN(totalEarnings) ? 0 : totalEarnings) -
+    (isNaN(niAmount) ? 0 : niAmount);
 
   // Get submissions for the selected date
   const submissionsForDate = payHistory.filter((pay) => pay.date === payDate);
@@ -359,6 +374,7 @@ const PayCalculator: React.FC<PayCalculatorProps> = ({
         overtimeEarnings={overtimeEarnings}
         totalEarnings={totalEarnings}
         proTaxEnabled={proTaxEnabled}
+        proNiEnabled={proNiEnabled}
         taxAmount={taxAmount}
         niAmount={niAmount}
         settings={settings}

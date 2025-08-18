@@ -1,5 +1,9 @@
 // Format currency amount to GBP format
 export const formatCurrency = (amount: number): string => {
+  // Handle NaN and invalid numbers gracefully
+  if (isNaN(amount) || !isFinite(amount)) {
+    return "£0.00";
+  }
   return new Intl.NumberFormat("en-GB", {
     style: "currency",
     currency: "GBP",

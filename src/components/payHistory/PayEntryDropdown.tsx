@@ -28,19 +28,19 @@ const PayEntryDropdown: React.FC<PayEntryDropdownProps> = ({
         onClick={() => onToggleDropdown(pay.id)}
         className={`${
           settings.darkMode
-            ? "text-gray-400 hover:text-gray-200"
-            : "text-slate-500 hover:text-slate-700"
-        } p-1`}
-        title="More options"
+            ? "text-blue-400 hover:text-blue-300"
+            : "text-blue-600 hover:text-blue-700"
+        } text-sm font-medium transition-colors`}
+        title="Edit, duplicate, or delete this entry"
       >
-        ⋮
+        Actions
       </button>
       {openDropdownId === pay.id && (
         <div
-          className={`absolute right-0 top-6 rounded-lg shadow-lg z-10 min-w-[120px] border ${
+          className={`absolute right-0 top-6 rounded-lg shadow-xl z-10 min-w-[140px] border-2 ${
             settings.darkMode
-              ? "bg-gray-800 border-gray-700"
-              : "bg-white border-gray-200"
+              ? "bg-gray-800 border-gray-600 shadow-gray-900/50"
+              : "bg-white border-gray-300 shadow-gray-400/30"
           }`}
         >
           <button

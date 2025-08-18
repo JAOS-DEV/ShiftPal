@@ -65,7 +65,8 @@ const TimeTracker: React.FC<TimeTrackerProps> = ({
   // Dropdown menu state
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
-  const [submitDate, setSubmitDate] = useState<string>(
+  const [submitDate, setSubmitDate] = useLocalStorage<string>(
+    "submitDate",
     new Date().toISOString().split("T")[0]
   );
 

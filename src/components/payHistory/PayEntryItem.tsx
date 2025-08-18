@@ -32,32 +32,38 @@ const PayEntryItem: React.FC<PayEntryItemProps> = ({
       }`}
     >
       <div className="flex justify-between items-center mb-1">
-        <span
-          className={`text-xs ${
-            settings.darkMode ? "text-gray-400" : "text-slate-400"
-          }`}
-        >
-          Submitted at: {pay.submissionTime}
-        </span>
-        <div className="flex items-center gap-2">
+        <div>
           <span
-            className={`font-mono text-sm ${
-              settings.darkMode ? "text-gray-300" : "text-slate-600"
+            className={`text-xs ${
+              settings.darkMode ? "text-gray-400" : "text-slate-400"
             }`}
           >
-            {formatCurrency(pay.totalPay)}
+            Submitted at: {pay.submissionTime}
           </span>
-          <PayEntryDropdown
-            pay={pay}
-            openDropdownId={openDropdownId}
-            settings={settings}
-            onToggleDropdown={onToggleDropdown}
-            onCloseDropdown={onCloseDropdown}
-            onEditPay={onEditPay}
-            onDuplicatePay={onDuplicatePay}
-            onDeletePay={onDeletePay}
-          />
+          <div
+            className={`text-xs ${
+              settings.enableTaxCalculations || settings.enableNiCalculations
+                ? settings.darkMode
+                  ? "text-gray-400"
+                  : "text-slate-500"
+                : "text-green-600"
+            }`}
+          >
+            {settings.enableTaxCalculations || settings.enableNiCalculations
+              ? `Total (before deductions): ${formatCurrency(pay.totalPay)}`
+              : `Total: ${formatCurrency(pay.totalPay)}`}
+          </div>
         </div>
+        <PayEntryDropdown
+          pay={pay}
+          openDropdownId={openDropdownId}
+          settings={settings}
+          onToggleDropdown={onToggleDropdown}
+          onCloseDropdown={onCloseDropdown}
+          onEditPay={onEditPay}
+          onDuplicatePay={onDuplicatePay}
+          onDeletePay={onDeletePay}
+        />
       </div>
 
       <div
@@ -100,10 +106,14 @@ const PayEntryItem: React.FC<PayEntryItemProps> = ({
           const taxAmount = pay.taxAmount || pay.totalPay * settings.taxRate;
           const afterTaxPay = pay.totalPay - taxAmount;
           return taxAmount > 0 ? (
-            <div className="mt-1 text-xs text-red-600">
-              Tax: -{formatCurrency(taxAmount)} | After Tax:{" "}
-              {formatCurrency(afterTaxPay)}
-            </div>
+            <>
+              <div className="mt-1 text-xs text-red-600">
+                Tax: -{formatCurrency(taxAmount)}
+              </div>
+              <div className="mt-1 text-xs text-green-600">
+                Final Total: {formatCurrency(afterTaxPay)}
+              </div>
+            </>
           ) : null;
         })()}
       {settings.enableNiCalculations &&
@@ -120,10 +130,14 @@ const PayEntryItem: React.FC<PayEntryItemProps> = ({
           const niAmount = pay.niAmount || calculateNI(pay.totalPay);
           const afterNiPay = pay.totalPay - niAmount;
           return niAmount > 0 ? (
-            <div className="mt-1 text-xs text-orange-600">
-              NI: -{formatCurrency(niAmount)} | After NI:{" "}
-              {formatCurrency(afterNiPay)}
-            </div>
+            <>
+              <div className="mt-1 text-xs text-orange-600">
+                NI: -{formatCurrency(niAmount)}
+              </div>
+              <div className="mt-1 text-xs text-green-600">
+                Final Total: {formatCurrency(afterNiPay)}
+              </div>
+            </>
           ) : null;
         })()}
       {/* Show simplified breakdown when both are enabled */}
@@ -140,19 +154,23 @@ const PayEntryItem: React.FC<PayEntryItemProps> = ({
           };
           const niAmount = pay.niAmount || calculateNI(pay.totalPay);
           const finalTotal = pay.totalPay - taxAmount - niAmount;
-          return taxAmount > 0 && niAmount > 0 ? (
+          return (
             <>
-              <div className="mt-1 text-xs text-red-600">
-                Tax: -{formatCurrency(taxAmount)}
-              </div>
-              <div className="mt-1 text-xs text-orange-600">
-                NI: -{formatCurrency(niAmount)}
-              </div>
+              {taxAmount > 0 && (
+                <div className="mt-1 text-xs text-red-600">
+                  Tax: -{formatCurrency(taxAmount)}
+                </div>
+              )}
+              {niAmount > 0 && (
+                <div className="mt-1 text-xs text-orange-600">
+                  NI: -{formatCurrency(niAmount)}
+                </div>
+              )}
               <div className="mt-1 text-xs text-green-600">
                 Final Total: {formatCurrency(finalTotal)}
               </div>
             </>
-          ) : null;
+          );
         })()}
 
       {/* Show notes if they exist */}
