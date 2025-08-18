@@ -22,7 +22,7 @@ const PayCalculatorSaveSection: React.FC<PayCalculatorSaveSectionProps> = ({
   settings,
 }) => {
   return (
-    <div className="flex-shrink-0 p-3 space-y-1.5 pb-4">
+    <div className="flex-shrink-0 px-4 pb-1.5 space-y-1.5">
       {/* Date Picker */}
       <div
         className={`${
@@ -39,11 +39,11 @@ const PayCalculatorSaveSection: React.FC<PayCalculatorSaveSectionProps> = ({
           >
             Select date ({submissionsForDate.length} submissions)
           </label>
-                     <InfoButton
-             onClick={() => setShowDateInfoModal(true)}
-             title="About pay date selection"
-             settings={settings}
-           />
+          <InfoButton
+            onClick={() => setShowDateInfoModal(true)}
+            title="About pay date selection"
+            settings={settings}
+          />
         </div>
         <input
           type="date"
@@ -69,13 +69,6 @@ const PayCalculatorSaveSection: React.FC<PayCalculatorSaveSectionProps> = ({
       >
         Save Pay
       </button>
-      <p
-        className={`text-[11px] -mt-1 text-center ${
-          settings.darkMode ? "text-gray-400" : "text-slate-500"
-        }`}
-      >
-        Saves today's pay to History. Change the date to save a past day.
-      </p>
     </div>
   );
 };
