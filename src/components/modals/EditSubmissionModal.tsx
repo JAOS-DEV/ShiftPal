@@ -1,5 +1,5 @@
 import React from "react";
-import { DailySubmission, TimeEntry, Settings } from "../types";
+import { DailySubmission, Settings, TimeEntry } from "../types";
 
 interface EditSubmissionModalProps {
   visible: boolean;
@@ -51,15 +51,31 @@ const EditSubmissionModal: React.FC<EditSubmissionModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2">
-      <div className="bg-white rounded-lg w-full max-w-sm mx-auto max-h-[80vh] overflow-y-auto">
-        <div className="p-3 border-b border-gray-200">
+      <div
+        className={`${
+          settings.darkMode ? "bg-gray-800" : "bg-white"
+        } rounded-lg w-full max-w-sm mx-auto max-h-[80vh] overflow-y-auto`}
+      >
+        <div
+          className={`p-3 border-b ${
+            settings.darkMode ? "border-gray-600" : "border-gray-200"
+          }`}
+        >
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-bold text-slate-800">
+            <h3
+              className={`text-lg font-bold ${
+                settings.darkMode ? "text-gray-100" : "text-slate-800"
+              }`}
+            >
               Edit Time Submission
             </h3>
             <button
               onClick={onCancel}
-              className="text-slate-400 hover:text-slate-600"
+              className={`${
+                settings.darkMode
+                  ? "text-gray-400 hover:text-gray-200"
+                  : "text-slate-400 hover:text-slate-600"
+              }`}
             >
               ✕
             </button>
@@ -86,20 +102,32 @@ const EditSubmissionModal: React.FC<EditSubmissionModalProps> = ({
                 };
                 onSubmissionChange(updatedSubmission);
               }}
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600 text-xs bg-white min-w-0 text-slate-700 max-w-full"
+              className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600 text-xs min-w-0 max-w-full ${
+                settings.darkMode
+                  ? "bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400"
+                  : "bg-white border-slate-300 text-slate-700"
+              }`}
             />
           </div>
 
           {/* Time Entries */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
+            <label
+              className={`block text-sm font-medium mb-2 ${
+                settings.darkMode ? "text-gray-200" : "text-slate-700"
+              }`}
+            >
               Time Entries
             </label>
             <div className="space-y-2">
               {editingSubmission.entries.map((entry, index) => (
                 <div
                   key={entry.id}
-                  className="border border-slate-200 rounded-md p-3"
+                  className={`border rounded-md p-3 ${
+                    settings.darkMode
+                      ? "border-gray-600 bg-gray-700"
+                      : "border-slate-200"
+                  }`}
                 >
                   <div className="flex justify-between items-center mb-2">
                     <span
@@ -129,7 +157,11 @@ const EditSubmissionModal: React.FC<EditSubmissionModalProps> = ({
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-xs text-slate-600 mb-1">
+                      <label
+                        className={`block text-xs mb-1 ${
+                          settings.darkMode ? "text-gray-300" : "text-slate-600"
+                        }`}
+                      >
                         Start Time
                       </label>
                       <input
@@ -216,19 +248,27 @@ const EditSubmissionModal: React.FC<EditSubmissionModalProps> = ({
                         }}
                         className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-[#003D5B] focus:border-[#003D5B] ${
                           editTimeErrors[`startTime-${index}`]
-                            ? "border-red-300 bg-red-50"
+                            ? settings.darkMode
+                              ? "border-red-500 bg-red-900/20"
+                              : "border-red-300 bg-red-50"
+                            : settings.darkMode
+                            ? "border-gray-600 bg-gray-700 text-gray-100"
                             : "border-slate-300"
                         }`}
                         placeholder="HH:MM"
                       />
                       {editTimeErrors[`startTime-${index}`] && (
-                        <p className="text-xs text-red-600 mt-1">
+                        <p className="text-xs text-red-400 mt-1">
                           {editTimeErrors[`startTime-${index}`]}
                         </p>
                       )}
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-600 mb-1">
+                      <label
+                        className={`block text-xs mb-1 ${
+                          settings.darkMode ? "text-gray-300" : "text-slate-600"
+                        }`}
+                      >
                         End Time
                       </label>
                       <input
@@ -297,13 +337,17 @@ const EditSubmissionModal: React.FC<EditSubmissionModalProps> = ({
                         }}
                         className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600 ${
                           editTimeErrors[`endTime-${index}`]
-                            ? "border-red-300 bg-red-50"
+                            ? settings.darkMode
+                              ? "border-red-500 bg-red-900/20"
+                              : "border-red-300 bg-red-50"
+                            : settings.darkMode
+                            ? "border-gray-600 bg-gray-700 text-gray-100"
                             : "border-slate-300"
                         }`}
                         placeholder="HH:MM"
                       />
                       {editTimeErrors[`endTime-${index}`] && (
-                        <p className="text-xs text-red-600 mt-1">
+                        <p className="text-xs text-red-400 mt-1">
                           {editTimeErrors[`endTime-${index}`]}
                         </p>
                       )}
@@ -329,14 +373,22 @@ const EditSubmissionModal: React.FC<EditSubmissionModalProps> = ({
                 };
                 onSubmissionChange(updatedSubmission);
               }}
-              className="w-full py-2 px-4 border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50 transition-colors"
+              className={`w-full py-2 px-4 border rounded-md transition-colors ${
+                settings.darkMode
+                  ? "border-gray-600 text-gray-200 hover:bg-gray-700"
+                  : "border-slate-300 text-slate-700 hover:bg-slate-50"
+              }`}
             >
               + Add Entry
             </button>
           </div>
 
           {/* Preview */}
-          <div className="bg-slate-50 p-3 rounded-md">
+          <div
+            className={`p-3 rounded-md ${
+              settings.darkMode ? "bg-gray-700" : "bg-slate-50"
+            }`}
+          >
             <h4
               className={`text-sm font-medium mb-2 ${
                 settings.darkMode ? "text-gray-200" : "text-slate-700"
@@ -344,7 +396,11 @@ const EditSubmissionModal: React.FC<EditSubmissionModalProps> = ({
             >
               Preview
             </h4>
-            <div className="text-sm text-slate-600 space-y-1">
+            <div
+              className={`text-sm space-y-1 ${
+                settings.darkMode ? "text-gray-300" : "text-slate-600"
+              }`}
+            >
               {editingSubmission.entries.map((entry, index) => {
                 const startTime =
                   entry.startTime.length === 4
@@ -372,7 +428,11 @@ const EditSubmissionModal: React.FC<EditSubmissionModalProps> = ({
                   </div>
                 );
               })}
-              <div className="font-medium pt-1 border-t border-slate-200">
+              <div
+                className={`font-medium pt-1 border-t ${
+                  settings.darkMode ? "border-gray-600" : "border-slate-200"
+                }`}
+              >
                 Total:{" "}
                 {formatDurationWithMinutes(
                   calculateTotalDuration(editingSubmission.entries)
@@ -382,10 +442,18 @@ const EditSubmissionModal: React.FC<EditSubmissionModalProps> = ({
           </div>
         </div>
 
-        <div className="p-3 border-t border-gray-200 flex gap-2">
+        <div
+          className={`p-3 border-t flex gap-2 ${
+            settings.darkMode ? "border-gray-600" : "border-gray-200"
+          }`}
+        >
           <button
             onClick={onCancel}
-            className="flex-1 py-2 px-4 border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50 transition-colors"
+            className={`flex-1 py-2 px-4 border rounded-md transition-colors ${
+              settings.darkMode
+                ? "border-gray-600 text-gray-200 hover:bg-gray-700"
+                : "border-slate-300 text-slate-700 hover:bg-slate-50"
+            }`}
           >
             Cancel
           </button>

@@ -120,10 +120,24 @@ const EditPayModal: React.FC<EditPayModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2">
-      <div className="bg-white rounded-lg w-full max-w-sm mx-auto max-h-[80vh] overflow-y-auto">
-        <div className="p-3 border-b border-gray-200">
+      <div
+        className={`${
+          settings.darkMode ? "bg-gray-800" : "bg-white"
+        } rounded-lg w-full max-w-sm mx-auto max-h-[80vh] overflow-y-auto`}
+      >
+        <div
+          className={`p-3 border-b ${
+            settings.darkMode ? "border-gray-600" : "border-gray-200"
+          }`}
+        >
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-bold text-slate-800">Edit Pay Entry</h3>
+            <h3
+              className={`text-lg font-bold ${
+                settings.darkMode ? "text-gray-100" : "text-slate-800"
+              }`}
+            >
+              Edit Pay Entry
+            </h3>
             <button
               onClick={onCancel}
               className={`${
@@ -151,7 +165,11 @@ const EditPayModal: React.FC<EditPayModalProps> = ({
               type="date"
               value={formData.date}
               onChange={(e) => handleInputChange("date", e.target.value)}
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600 text-xs min-w-0 max-w-full"
+              className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600 text-xs min-w-0 max-w-full ${
+                settings.darkMode
+                  ? "bg-gray-700 border-gray-600 text-gray-100"
+                  : "border-slate-300"
+              }`}
             />
           </div>
 
@@ -174,7 +192,11 @@ const EditPayModal: React.FC<EditPayModalProps> = ({
                 onChange={(e) =>
                   handleInputChange("standardHours", e.target.value)
                 }
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600"
+                className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600 ${
+                  settings.darkMode
+                    ? "bg-gray-700 border-gray-600 text-gray-100"
+                    : "border-slate-300"
+                }`}
               />
             </div>
             <div>
@@ -194,7 +216,11 @@ const EditPayModal: React.FC<EditPayModalProps> = ({
                 onChange={(e) =>
                   handleInputChange("standardMinutes", e.target.value)
                 }
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600"
+                className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600 ${
+                  settings.darkMode
+                    ? "bg-gray-700 border-gray-600 text-gray-100"
+                    : "border-slate-300"
+                }`}
               />
             </div>
             <div>
@@ -214,7 +240,11 @@ const EditPayModal: React.FC<EditPayModalProps> = ({
                 onChange={(e) =>
                   handleInputChange("standardRate", e.target.value)
                 }
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600"
+                className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600 ${
+                  settings.darkMode
+                    ? "bg-gray-700 border-gray-600 text-gray-100"
+                    : "border-slate-300"
+                }`}
               />
             </div>
           </div>
@@ -238,7 +268,11 @@ const EditPayModal: React.FC<EditPayModalProps> = ({
                 onChange={(e) =>
                   handleInputChange("overtimeHours", e.target.value)
                 }
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600"
+                className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600 ${
+                  settings.darkMode
+                    ? "bg-gray-700 border-gray-600 text-gray-100"
+                    : "border-slate-300"
+                }`}
               />
             </div>
             <div>
@@ -258,7 +292,11 @@ const EditPayModal: React.FC<EditPayModalProps> = ({
                 onChange={(e) =>
                   handleInputChange("overtimeMinutes", e.target.value)
                 }
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600"
+                className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600 ${
+                  settings.darkMode
+                    ? "bg-gray-700 border-gray-600 text-gray-100"
+                    : "border-slate-300"
+                }`}
               />
             </div>
             <div>
@@ -278,7 +316,11 @@ const EditPayModal: React.FC<EditPayModalProps> = ({
                 onChange={(e) =>
                   handleInputChange("overtimeRate", e.target.value)
                 }
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600"
+                className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600 ${
+                  settings.darkMode
+                    ? "bg-gray-700 border-gray-600 text-gray-100"
+                    : "border-slate-300"
+                }`}
               />
             </div>
           </div>
@@ -296,13 +338,21 @@ const EditPayModal: React.FC<EditPayModalProps> = ({
               value={formData.notes}
               onChange={(e) => handleInputChange("notes", e.target.value)}
               rows={3}
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600"
+              className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-gray-600 focus:border-gray-600 ${
+                settings.darkMode
+                  ? "bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400"
+                  : "border-slate-300"
+              }`}
               placeholder="Add any notes about this pay entry..."
             />
           </div>
 
           {/* Preview */}
-          <div className="bg-slate-50 p-3 rounded-md">
+          <div
+            className={`p-3 rounded-md ${
+              settings.darkMode ? "bg-gray-700" : "bg-slate-50"
+            }`}
+          >
             <h4
               className={`text-sm font-medium mb-2 ${
                 settings.darkMode ? "text-gray-200" : "text-slate-700"
@@ -353,10 +403,18 @@ const EditPayModal: React.FC<EditPayModalProps> = ({
           </div>
         </div>
 
-        <div className="p-3 border-t border-gray-200 flex gap-2">
+        <div
+          className={`p-3 border-t flex gap-2 ${
+            settings.darkMode ? "border-gray-600" : "border-gray-200"
+          }`}
+        >
           <button
             onClick={onCancel}
-            className="flex-1 py-2 px-4 border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50 transition-colors"
+            className={`flex-1 py-2 px-4 border rounded-md transition-colors ${
+              settings.darkMode
+                ? "border-gray-600 text-gray-200 hover:bg-gray-700"
+                : "border-slate-300 text-slate-700 hover:bg-slate-50"
+            }`}
           >
             Cancel
           </button>
