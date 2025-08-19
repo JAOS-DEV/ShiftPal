@@ -1,19 +1,20 @@
-import React, { useState, useRef, useEffect } from "react";
-import { TimeEntry, DailySubmission, Settings } from "../types";
-import { useTimeCalculations } from "../hooks/useTimeCalculations";
-import { usePeriodNavigation } from "../hooks/usePeriodNavigation";
-import { usePeriodFilter } from "../hooks/usePeriodFilter";
-import { PlusIcon, TrashIcon } from "../components/ui/icons";
-import useLocalStorage from "../hooks/useLocalStorage";
-import { PeriodSelector } from "../components/layout";
-import ToastNotification from "../components/ui/ToastNotification";
+import React, { useEffect, useRef, useState } from "react";
 import { TabNavigation } from "../components/layout";
-import { TimeEntryForm } from "../components/timeTracker";
-import { EntriesList } from "../components/timeTracker";
-import { SubmitDaySection } from "../components/timeTracker";
-import { TotalSection } from "../components/timeTracker";
-import { HistoryView } from "../components/timeTracker";
 import { EditSubmissionModal } from "../components/modals";
+import {
+  EntriesList,
+  HistoryView,
+  LimitsView,
+  SubmitDaySection,
+  TimeEntryForm,
+  TotalSection,
+} from "../components/timeTracker";
+import ToastNotification from "../components/ui/ToastNotification";
+import useLocalStorage from "../hooks/useLocalStorage";
+import { usePeriodFilter } from "../hooks/usePeriodFilter";
+import { usePeriodNavigation } from "../hooks/usePeriodNavigation";
+import { useTimeCalculations } from "../hooks/useTimeCalculations";
+import { DailySubmission, Settings, TimeEntry } from "../types";
 
 import InfoModal from "../components/ui/InfoModal";
 
@@ -40,7 +41,9 @@ const TimeTracker: React.FC<TimeTrackerProps> = ({
   settings,
   isLoadingCloudData = false, // Add default value
 }) => {
-  const [activeTab, setActiveTab] = useState<"tracker" | "history">("tracker");
+  const [activeTab, setActiveTab] = useState<"tracker" | "history" | "limits">(
+    "tracker"
+  );
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [startTimeError, setStartTimeError] = useState("");
@@ -525,7 +528,7 @@ const TimeTracker: React.FC<TimeTrackerProps> = ({
             />
           </div>
         </>
-      ) : (
+      ) : activeTab === "history" ? (
         <>
           {/* History View */}
           <HistoryView
@@ -550,6 +553,14 @@ const TimeTracker: React.FC<TimeTrackerProps> = ({
             formatDurationWithMinutes={formatDurationWithMinutes}
             calculateTotalDuration={calculateTotalDuration}
             isLoadingCloudData={isLoadingCloudData}
+          />
+        </>
+      ) : (
+        <>
+          {/* Limits View */}
+          <LimitsView
+            totalMinutes={totalDuration.totalMinutes}
+            settings={settings}
           />
         </>
       )}

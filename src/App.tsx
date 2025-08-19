@@ -46,15 +46,9 @@ const App: React.FC = () => {
 
   // Changelog content - edit this for each release
   const CHANGELOG = {
-    version: "2.1.0",
-    title: "What's New in ShiftPal 2.1.0",
-    changes: [
-      "🎨 Dark mode support for all edit modals",
-      "💾 Fixed data not saving for some users",
-      "⚡ Performance improvements",
-      "🤖 Beta chat feature enabled",
-      "🐛 Bug fixes",
-    ],
+    version: "2.1.1",
+    title: "What's New in ShiftPal 2.1.1",
+    changes: ["➡ Moved limits view into the tracker page"],
     note: "You'll be signed out to ensure all updates are applied correctly. Don't worry - all your data will be preserved!",
   };
 

@@ -1,9 +1,9 @@
 import React from "react";
-import { Settings } from "../types";
+import { Settings } from "../../types";
 
 interface TabNavigationProps {
-  activeTab: "tracker" | "history";
-  setActiveTab: (tab: "tracker" | "history") => void;
+  activeTab: "tracker" | "history" | "limits";
+  setActiveTab: (tab: "tracker" | "history" | "limits") => void;
   settings: Settings;
 }
 
@@ -48,6 +48,20 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
           }`}
         >
           History
+        </button>
+        <button
+          onClick={() => setActiveTab("limits")}
+          className={`flex-1 py-3 px-4 text-sm font-medium transition-colors duration-200 ${
+            activeTab === "limits"
+              ? settings.darkMode
+                ? "text-gray-100 border-b-2 border-indigo-400"
+                : "text-gray-800 border-b-2 border-gray-800"
+              : settings.darkMode
+              ? "text-gray-400 hover:text-gray-200"
+              : "text-slate-500 hover:text-slate-700"
+          }`}
+        >
+          Limits
         </button>
       </div>
     </div>

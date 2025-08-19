@@ -1,5 +1,5 @@
 import React from "react";
-import { View, UserProfile } from "../../types";
+import { UserProfile, View } from "../../types";
 import { NavItem } from "./NavItem";
 
 interface BottomNavProps {
@@ -36,12 +36,6 @@ const BottomNav: React.FC<BottomNavProps> = ({
           label="Pay"
           isActive={activeView === View.PAY}
           onClick={() => setActiveView(View.PAY)}
-          darkMode={settings?.darkMode}
-        />
-        <NavItem
-          label="Limits"
-          isActive={activeView === View.LAW_LIMITS}
-          onClick={() => setActiveView(View.LAW_LIMITS)}
           darkMode={settings?.darkMode}
         />
         <NavItem
