@@ -42,7 +42,7 @@ import {
 
 const App: React.FC = () => {
   // App version for cache busting - sync with package.json
-  const APP_VERSION = "2.1.0"; // Update this when you deploy changes
+  const APP_VERSION = "2.1.1"; // Update this when you deploy changes
 
   // Changelog content - edit this for each release
   const CHANGELOG = {
